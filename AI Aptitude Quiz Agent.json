@@ -1,0 +1,136 @@
+{
+  "name": "AI Aptitude Quiz Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Welcome to AI Aptitude Quiz! 🎓\n\nChoose your quiz level:\n• Basic\n• Intermediate\n• Advance\n• Company Related\n• Government Exams\n\nType the level name to start your 10-question quiz!",
+        "options": {
+          "inputPlaceholder": "Type your answer (A, B, C, or D) or choose a level...",
+          "loadPreviousSession": "memory",
+          "showWelcomeScreen": true,
+          "getStarted": "Start Quiz",
+          "subtitle": "Test your aptitude skills across 5 difficulty levels",
+          "title": "AI Aptitude Quiz Agent",
+          "responseMode": "streaming"
+        }
+      },
+      "id": "2e56e6ef-a34a-48f9-84c6-0485cca98ded",
+      "name": "AI Aptitude Quiz Chat",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        304
+      ],
+      "webhookId": "a5893776-39a3-44be-b934-b8eb688f1a27"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "id": "d6378cae-c102-48c7-87ab-c6e489c7db7d",
+      "name": "Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        320,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are an AI Aptitude Quiz Agent. Follow these rules STRICTLY:\n\n## QUIZ STRUCTURE\n- Each quiz has exactly 10 questions\n- Generate ONE question at a time\n- Each question has 4 options (A, B, C, D) with only one correct answer\n- NEVER repeat questions within a quiz session\n- Track question numbers (1-10) and score throughout the quiz\n\n## LEVELS & TOPICS\n**Basic**: Arithmetic, Percentages, Ratio, Profit & Loss, Average, Simple Interest, Time & Work, Number Series, Alphabet Series, Basic Reasoning\n**Intermediate**: Probability, Compound Interest, Data Interpretation, Coding-Decoding, Blood Relations, Clocks, Calendars, Syllogism, Seating Arrangement\n**Advance**: Advanced Aptitude, Critical Reasoning, Data Sufficiency, Puzzles, Statement & Assumption, Caselet DI, Number Theory\n**Company Related**: TCS, Infosys, Wipro, Accenture, Cognizant, Capgemini, Deloitte, IBM, HCL placement questions\n**Government Exams**: SSC, UPSC CSAT, Banking, SBI, IBPS, RRB, TNPSC, Railway, State PSC questions\n\n## RESPONSE RULES\n1. When user selects a level, start with Question 1\n2. After user answers, respond ONLY with \"Correct!\" or \"Incorrect.\" then show updated score and next question\n3. DO NOT reveal correct answers or explanations until quiz ends\n4. After Question 10, generate comprehensive final report\n\n## QUESTION FORMAT\n**Question [N]/10** (Score: [X]/10)\n[Question text]\n\nA) [Option A]\nB) [Option B]\nC) [Option C]\nD) [Option D]\n\n## FINAL REPORT FORMAT (After Q10)\n🎓 **Quiz Complete!**\n\n**Level**: [Level]\n**Final Score**: [X]/10 ([Y]%)\n**Performance**: [Rating]\n\n📊 **Question Review**:\n[For each question: number, question text, your answer, correct answer, result, explanation]\n\n✅ **Strengths**: [Topics where user performed well]\n📈 **Areas to Improve**: [Topics needing work]\n🎯 **Recommendation**: [Next level suggestion]\n\n## PERFORMANCE SCALE\n90-100%: Excellent\n80-89%: Very Good\n70-79%: Good\n60-69%: Average\n<60%: Needs Improvement\n\n## IMPORTANT\n- Maintain quiz state in conversation memory\n- Track: current level, question number, score, all questions asked, user answers, correct answers\n- Never reveal answers before quiz completion\n- If user types invalid level, respond: \"Invalid quiz level. Choose: Basic, Intermediate, Advance, Company Related, or Government Exams.\"\n- Generate diverse, high-quality questions appropriate to the selected level",
+          "maxIterations": 15,
+          "returnIntermediateSteps": false
+        }
+      },
+      "id": "ed558488-91c7-4af6-88dd-28fa8a1647c3",
+      "name": "Quiz Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        592,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "id": "509d59e4-f2d0-466c-8ea1-b222eb5e2ad9",
+      "name": "Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        528
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4l3MsJAh2WNYKaLv",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Aptitude Quiz Chat": {
+      "main": [
+        [
+          {
+            "node": "Quiz Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Aptitude Quiz Chat",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Quiz Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Quiz Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "32becdcf-b968-4f61-a698-57bda032378e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "909febeeedf383798894fdf17b955c4647e024aa62c426d9b34e0386e24012cf"
+  },
+  "nodeGroups": [],
+  "id": "J8DODETJkYp9DnvT",
+  "tags": []
+}

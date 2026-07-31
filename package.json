@@ -1,0 +1,8 @@
+{
+  "name": "ai-aptitude-quiz-platform-root",
+  "version": "1.0.0",
+  "description": "Root workspace of the AI Aptitude Quiz Platform",
+  "scripts": {
+    "start": "node start.js"
+  }
+}
