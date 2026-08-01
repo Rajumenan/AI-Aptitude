@@ -80,97 +80,91 @@ const Profile = () => {
   };
 
   return (
-    <div className="animated" style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '900px', margin: '0 auto' }}>
+    <div className="w-full max-w-4xl mx-auto space-y-6 animate-fadeIn">
       
       {/* Profile Info Header */}
-      <div style={styles.profileHeader}>
-        <div style={styles.avatar}>
-          <User size={38} color="var(--primary)" />
+      <div className="flex flex-col items-center p-6 bg-[var(--card)] border border-[var(--border)] rounded-2xl shadow-sm">
+        <div className="w-16 h-16 rounded-full bg-[var(--primary-light)] flex items-center justify-center mb-3">
+          <User size={36} className="text-[var(--primary)]" />
         </div>
-        <h2 style={{ fontSize: '20px', fontWeight: '800' }}>{user?.username || 'Learner'}</h2>
-        <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{user?.email}</span>
+        <h2 className="text-xl sm:text-2xl font-extrabold text-[var(--text)]">{user?.username || 'Learner'}</h2>
+        <span className="text-xs sm:text-sm text-[var(--text-secondary)] mt-0.5">{user?.email}</span>
       </div>
 
-      {/* Tabs */}
-      <div style={styles.tabsRow}>
+      {/* Responsive Navigation Tabs */}
+      <div className="flex justify-center border-b border-[var(--border)] overflow-x-auto scrollbar-none">
         {['stats', 'settings', 'help', 'about'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              color: activeTab === tab ? 'var(--primary)' : 'var(--text-secondary)',
-              borderBottom: activeTab === tab ? '3px solid var(--primary)' : '3px solid transparent',
-              transition: 'var(--transition)'
-            }}
+            className={`px-4 sm:px-6 py-3 text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap border-b-2 ${
+              activeTab === tab 
+                ? 'text-[var(--primary)] border-[var(--primary)]' 
+                : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text)]'
+            }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
 
-      {/* Tab Panels */}
+      {/* Tab Content Panels */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px' }}>
-          <div style={{ width: '35px', height: '35px', borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+        <div className="text-center py-12">
+          <div className="w-8 h-8 rounded-full border-3 border-[var(--border)] border-t-[var(--primary)] animate-spin mx-auto" />
         </div>
       ) : (
-        <div style={{ minHeight: '300px' }}>
+        <div className="min-h-[300px]">
           {/* STATS & CERTIFICATES */}
           {activeTab === 'stats' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div className="stats-grid">
-                <div className="stats-card">
-                  <span className="stats-num">{profileData?.stats.totalQuizzes || 0}</span>
-                  <span className="stats-label">QUIZZES TAKEN</span>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div className="stats-card w-full">
+                  <span className="stats-num text-xl sm:text-2xl">{profileData?.stats.totalQuizzes || 0}</span>
+                  <span className="stats-label text-[10px] sm:text-xs">QUIZZES TAKEN</span>
                 </div>
-                <div className="stats-card">
-                  <span className="stats-num">{profileData?.stats.averageAccuracy || 0}%</span>
-                  <span className="stats-label">ACCURACY RATE</span>
+                <div className="stats-card w-full">
+                  <span className="stats-num text-xl sm:text-2xl">{profileData?.stats.averageAccuracy || 0}%</span>
+                  <span className="stats-label text-[10px] sm:text-xs">ACCURACY RATE</span>
                 </div>
-                <div className="stats-card">
-                  <span className="stats-num">{profileData?.stats.certificatesCount || 0}</span>
-                  <span className="stats-label">CERTIFICATES</span>
+                <div className="stats-card w-full">
+                  <span className="stats-num text-xl sm:text-2xl">{profileData?.stats.certificatesCount || 0}</span>
+                  <span className="stats-label text-[10px] sm:text-xs">CERTIFICATES</span>
                 </div>
-                <div className="stats-card">
-                  <span className="stats-num">{Math.round((profileData?.stats.totalTimeSpent || 0) / 60)}m</span>
-                  <span className="stats-label">TOTAL MINUTES</span>
+                <div className="stats-card w-full">
+                  <span className="stats-num text-xl sm:text-2xl">{Math.round((profileData?.stats.totalTimeSpent || 0) / 60)}m</span>
+                  <span className="stats-label text-[10px] sm:text-xs">TOTAL MINUTES</span>
                 </div>
               </div>
 
-              {/* Certificates */}
+              {/* Certificates List */}
               <div>
-                <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '14px' }}>Unlocked Certificates</h3>
+                <h3 className="text-base sm:text-lg font-bold mb-3 text-[var(--text)]">Unlocked Certificates</h3>
                 {profileData?.certificates.length === 0 ? (
-                  <div style={styles.emptyBox}>
-                    <Award size={36} style={{ color: 'var(--text-secondary)', opacity: 0.5, marginBottom: '8px' }} />
-                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                  <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-8 flex flex-col items-center text-center">
+                    <Award size={36} className="text-[var(--text-secondary)] opacity-50 mb-2" />
+                    <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
                       Earn score &ge; 70% in any quiz to unlock a Certificate of Achievement.
                     </p>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div className="space-y-2.5">
                     {profileData?.certificates.map((cert, index) => (
                       <div 
                         key={index} 
-                        style={styles.certRow}
                         onClick={() => viewCertificate(cert)}
+                        className="flex items-center gap-3 p-3 sm:p-4 bg-[var(--card)] border border-[var(--border)] rounded-xl cursor-pointer hover:border-[var(--primary)] transition-all"
                       >
-                        <div style={styles.certIconBg}>
+                        <div className="w-9 h-9 rounded-lg bg-[#F59E0B15] flex items-center justify-center shrink-0">
                           <Award size={20} color="#F59E0B" />
                         </div>
-                        <div style={{ flex: 1 }}>
-                          <h4 style={{ fontSize: '14px', fontWeight: '700' }}>{cert.level} Level Certificate</h4>
-                          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-bold text-[var(--text)] truncate">{cert.level} Level Certificate</h4>
+                          <span className="text-xs text-[var(--text-secondary)]">
                             Score: {cert.score}/10 | Date: {new Date(cert.dateGenerated).toLocaleDateString()}
                           </span>
                         </div>
-                        <ChevronRight size={16} color="var(--text-secondary)" />
+                        <ChevronRight size={16} className="text-[var(--text-secondary)] shrink-0" />
                       </div>
                     ))}
                   </div>
@@ -181,47 +175,43 @@ const Profile = () => {
 
           {/* SETTINGS */}
           {activeTab === 'settings' && (
-            <div style={styles.cardContainer}>
-              <div style={styles.settingsRow}>
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 sm:p-6 shadow-sm divide-y divide-[var(--border)] space-y-4">
+              <div className="flex items-center justify-between pt-2">
                 <div>
-                  <h4 style={{ fontSize: '15px', fontWeight: '700' }}>Dark Mode Theme</h4>
-                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Switch visual colors scheme</p>
+                  <h4 className="text-sm sm:text-base font-bold text-[var(--text)]">Dark Mode Theme</h4>
+                  <p className="text-xs text-[var(--text-secondary)]">Switch visual color scheme</p>
                 </div>
                 <input 
                   type="checkbox" 
                   checked={isDarkMode} 
                   onChange={handleToggleDarkMode} 
-                  style={styles.switch}
+                  className="w-10 h-5 cursor-pointer accent-[var(--primary)]"
                 />
               </div>
 
-              <div style={styles.line} />
-
-              <div style={styles.settingsRow}>
+              <div className="flex items-center justify-between pt-4">
                 <div>
-                  <h4 style={{ fontSize: '15px', fontWeight: '700' }}>Push Notifications</h4>
-                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Get live score updates and alerts</p>
+                  <h4 className="text-sm sm:text-base font-bold text-[var(--text)]">Push Notifications</h4>
+                  <p className="text-xs text-[var(--text-secondary)]">Get live score updates and alerts</p>
                 </div>
                 <input 
                   type="checkbox" 
                   checked={pushEnabled} 
                   onChange={(e) => updatePreference('push', e.target.checked)} 
-                  style={styles.switch}
+                  className="w-10 h-5 cursor-pointer accent-[var(--primary)]"
                 />
               </div>
 
-              <div style={styles.line} />
-
-              <div style={styles.settingsRow}>
+              <div className="flex items-center justify-between pt-4">
                 <div>
-                  <h4 style={{ fontSize: '15px', fontWeight: '700' }}>Email Alerts</h4>
-                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Receive certificates pdf files by email</p>
+                  <h4 className="text-sm sm:text-base font-bold text-[var(--text)]">Email Alerts</h4>
+                  <p className="text-xs text-[var(--text-secondary)]">Receive certificate updates by email</p>
                 </div>
                 <input 
                   type="checkbox" 
                   checked={emailEnabled} 
                   onChange={(e) => updatePreference('email', e.target.checked)} 
-                  style={styles.switch}
+                  className="w-10 h-5 cursor-pointer accent-[var(--primary)]"
                 />
               </div>
             </div>
@@ -229,53 +219,50 @@ const Profile = () => {
 
           {/* HELP CENTER */}
           {activeTab === 'help' && (
-            <div style={styles.cardContainer}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div>
-                  <h4 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>How does the AI question generator work?</h4>
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                    The backend API is integrated with the Google Gemini API to dynamically generate unique, level-specific questions for your quiz. A local fallback question bank is triggered if network issues arise.
-                  </p>
-                </div>
-                <div style={styles.line} />
-                <div>
-                  <h4 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>What score is required for a certificate?</h4>
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                    You must score at least 7 out of 10 correct answers (scoring 70% or more) in any quiz session to earn a certificate.
-                  </p>
-                </div>
-                <div style={styles.line} />
-                <div>
-                  <h4 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>Can I resume an active quiz?</h4>
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                    Yes, quiz states are stored on the server. If you accidentally close your browser, a resume warning card will be displayed on the Dashboard to let you continue from the same question.
-                  </p>
-                </div>
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 sm:p-6 shadow-sm space-y-4">
+              <div>
+                <h4 className="text-sm font-bold text-[var(--text)] mb-1">How does the AI question generator work?</h4>
+                <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                  The backend API connects to Google Gemini AI models to dynamically generate level-specific questions for your quiz session.
+                </p>
+              </div>
+              <div className="border-t border-[var(--border)] pt-3">
+                <h4 className="text-sm font-bold text-[var(--text)] mb-1">What score is required for a certificate?</h4>
+                <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                  You must score at least 7 out of 10 correct answers (70% accuracy or higher) to unlock an official certificate.
+                </p>
+              </div>
+              <div className="border-t border-[var(--border)] pt-3">
+                <h4 className="text-sm font-bold text-[var(--text)] mb-1">Can I resume an active quiz?</h4>
+                <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                  Yes, session state is preserved on the server. If you leave or refresh, a resume banner will appear on the Dashboard.
+                </p>
               </div>
             </div>
           )}
 
           {/* ABOUT */}
           {activeTab === 'about' && (
-            <div style={styles.cardContainer}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
-                <span style={{ fontSize: '32px' }}>🎓</span>
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 sm:p-6 shadow-sm space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🎓</span>
                 <div>
-                  <h3 style={{ fontSize: '17px', fontWeight: '800' }}>AI Aptitude Quiz Platform</h3>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Vite Web App v1.0.0 (Stable)</span>
+                  <h3 className="text-base sm:text-lg font-bold text-[var(--text)]">AI Aptitude Quiz Platform</h3>
+                  <span className="text-xs text-[var(--text-secondary)]">Vite Single Page Web App v1.0.0</span>
                 </div>
               </div>
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '20px' }}>
-                An enterprise-level adaptive testing platform compiling aptitude assessments. Powered by Express APIs, MongoDB storage clusters, and Google Gemini AI models.
+              <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                An adaptive testing platform built with React, Vite, Node.js Express APIs, MongoDB storage, and Google Gemini AI.
               </p>
-              <div style={styles.line} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', fontSize: '13px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Core Architecture</span>
-                <span style={{ fontWeight: '700' }}>Node.js / Express / Mongoose</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', fontSize: '13px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Client Frontend</span>
-                <span style={{ fontWeight: '700' }}>React Single Page App (Vite)</span>
+              <div className="border-t border-[var(--border)] pt-3 space-y-2 text-xs sm:text-sm">
+                <div className="flex justify-between">
+                  <span className="text-[var(--text-secondary)]">Core Architecture</span>
+                  <span className="font-bold text-[var(--text)]">Node.js / Express / MongoDB</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[var(--text-secondary)]">Client Frontend</span>
+                  <span className="font-bold text-[var(--text)]">React + Vite + Tailwind CSS</span>
+                </div>
               </div>
             </div>
           )}
@@ -283,54 +270,56 @@ const Profile = () => {
           {/* Logout Button */}
           <button 
             onClick={triggerLogout}
-            className="btn btn-outline" 
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', borderColor: 'var(--danger)', color: 'var(--danger)', marginTop: '20px' }}
+            className="w-full mt-6 h-12 flex items-center justify-center gap-2 border-2 border-[var(--danger)] text-[var(--danger)] rounded-xl font-bold hover:bg-[var(--danger-light)] transition-colors cursor-pointer"
           >
-            <LogOut size={16} />
+            <LogOut size={18} />
             <span>Logout Session</span>
           </button>
         </div>
       )}
 
-      {/* MOCK CERTIFICATE VIEWER MODAL */}
+      {/* CERTIFICATE MODAL */}
       {selectedCert && certificateModalVisible && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalCard}>
-            <button style={styles.closeBtn} onClick={() => setCertificateModalVisible(false)}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[var(--card)] rounded-2xl w-full max-w-md p-4 sm:p-6 relative shadow-2xl">
+            <button 
+              className="absolute top-3 right-3 p-1 rounded-full text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--border)] transition-colors cursor-pointer" 
+              onClick={() => setCertificateModalVisible(false)}
+            >
               <X size={20} />
             </button>
 
-            {/* Classical Certificate Design */}
-            <div style={styles.certFrame}>
-              <Award size={48} color="#F59E0B" style={{ marginBottom: '10px' }} />
-              <h2 style={styles.certTitle}>CERTIFICATE OF ACHIEVEMENT</h2>
-              <span style={styles.certSubTitle}>AI APTITUDE QUIZ PLATFORM</span>
+            {/* Classical Certificate Card */}
+            <div className="border-2 border-[#F59E0B] rounded-xl p-4 sm:p-6 text-center bg-[#FFFBF0] text-gray-900">
+              <Award size={44} className="text-[#F59E0B] mx-auto mb-2" />
+              <h2 className="text-base sm:text-lg font-black tracking-wider text-gray-900">CERTIFICATE OF ACHIEVEMENT</h2>
+              <span className="text-[10px] font-bold text-gray-500 tracking-widest block mt-0.5">AI APTITUDE QUIZ PLATFORM</span>
               
-              <div style={styles.certLine} />
+              <div className="h-px bg-gray-300 w-3/4 mx-auto my-3" />
               
-              <p style={styles.certItalic}>This certificate is proudly awarded to</p>
-              <h1 style={styles.certUser}>{user?.username || 'Learner'}</h1>
+              <p className="text-xs italic text-gray-600">This certificate is proudly awarded to</p>
+              <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 my-1">{user?.username || 'Learner'}</h1>
               
-              <p style={{ fontSize: '11px', color: '#6B7280', margin: '8px 0' }}>
-                for successfully demonstrating knowledge in the
+              <p className="text-[11px] text-gray-500 my-1">
+                for demonstrating knowledge in the
               </p>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1E1E24' }}>
+              <h3 className="text-sm sm:text-base font-bold text-gray-900">
                 {selectedCert.level} Level Aptitude Quiz
               </h3>
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#10B981' }}>
+              <span className="text-xs font-bold text-emerald-600 block mt-1">
                 Score: {selectedCert.score}/10 (Accuracy: {selectedCert.score * 10}%)
               </span>
 
-              <div style={styles.certLine} />
+              <div className="h-px bg-gray-300 w-3/4 mx-auto my-3" />
 
-              <div style={styles.certFooter}>
+              <div className="flex justify-between text-left text-[10px] text-gray-600 mt-3 pt-1">
                 <div>
-                  <span style={styles.certFooterLabel}>DATE GENERATED</span>
-                  <span style={styles.certFooterVal}>{new Date(selectedCert.dateGenerated).toLocaleDateString()}</span>
+                  <span className="block font-bold text-gray-400">DATE GENERATED</span>
+                  <span className="font-bold text-gray-800">{new Date(selectedCert.dateGenerated).toLocaleDateString()}</span>
                 </div>
-                <div>
-                  <span style={styles.certFooterLabel}>VERIFICATION ID</span>
-                  <span style={styles.certFooterVal}>{selectedCert.certificateId.slice(0, 8).toUpperCase()}</span>
+                <div className="text-right">
+                  <span className="block font-bold text-gray-400">VERIFICATION ID</span>
+                  <span className="font-bold text-gray-800">{selectedCert.certificateId.slice(0, 8).toUpperCase()}</span>
                 </div>
               </div>
             </div>
@@ -339,182 +328,6 @@ const Profile = () => {
       )}
     </div>
   );
-};
-
-const styles = {
-  profileHeader: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: '24px',
-    backgroundColor: 'var(--card)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius-lg)',
-    boxShadow: '0 4px 12px var(--shadow)',
-  },
-  avatar: {
-    width: '64px',
-    height: '64px',
-    borderRadius: '50%',
-    backgroundColor: 'var(--primary-light)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: '12px',
-  },
-  usernameText: {
-    fontSize: '20px',
-    fontWeight: '800',
-  },
-  emailText: {
-    fontSize: '12px',
-  },
-  tabsRow: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '20px',
-    borderBottom: '1px solid var(--border)',
-    marginBottom: '5px',
-  },
-  emptyBox: {
-    backgroundColor: 'var(--card)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius)',
-    padding: '30px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  certRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '15px',
-    padding: '12px 20px',
-    backgroundColor: 'var(--card)',
-    border: '1.5px solid var(--border)',
-    borderRadius: 'var(--radius)',
-    cursor: 'pointer',
-    transition: 'var(--transition)',
-  },
-  certIconBg: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '8px',
-    backgroundColor: '#F59E0B15',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardContainer: {
-    backgroundColor: 'var(--card)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius-lg)',
-    padding: '24px',
-    boxShadow: '0 4px 12px var(--shadow)',
-  },
-  settingsRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '6px 0',
-  },
-  switch: {
-    width: '44px',
-    height: '22px',
-    cursor: 'pointer',
-  },
-  line: {
-    height: '1px',
-    backgroundColor: 'var(--border)',
-    margin: '16px 0',
-  },
-  modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '20px',
-  },
-  modalCard: {
-    backgroundColor: 'var(--card)',
-    borderRadius: 'var(--radius-lg)',
-    width: '100%',
-    maxWidth: '460px',
-    padding: '16px',
-    position: 'relative',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: '12px',
-    right: '12px',
-    background: 'none',
-    border: 'none',
-    color: 'var(--text-secondary)',
-    cursor: 'pointer',
-  },
-  certFrame: {
-    border: '2px solid #F59E0B',
-    borderRadius: '10px',
-    padding: '20px',
-    textAlign: 'center',
-    backgroundColor: '#FFFBF0', // Traditional parchment styling
-  },
-  certTitle: {
-    fontSize: '17px',
-    fontWeight: '800',
-    color: '#1E1E24',
-    letterSpacing: '1px',
-    marginTop: '6px',
-  },
-  certSubTitle: {
-    fontSize: '10px',
-    fontWeight: '700',
-    color: '#6B7280',
-    letterSpacing: '2px',
-  },
-  certLine: {
-    height: '1px',
-    backgroundColor: '#D1D5DB',
-    margin: '12px auto',
-    width: '80%',
-  },
-  certItalic: {
-    fontSize: '11px',
-    fontStyle: 'italic',
-    color: '#6B7280',
-  },
-  certUser: {
-    fontSize: '22px',
-    fontWeight: '800',
-    color: '#111827',
-    margin: '4px 0',
-  },
-  certFooter: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    textAlign: 'left',
-    marginTop: '15px',
-    padding: '0 6px',
-  },
-  certFooterLabel: {
-    display: 'block',
-    fontSize: '7px',
-    fontWeight: '700',
-    color: '#9CA3AF',
-    letterSpacing: '0.5px',
-  },
-  certFooterVal: {
-    fontSize: '10px',
-    fontWeight: '700',
-    color: '#374151',
-  }
 };
 
 export default Profile;

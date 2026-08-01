@@ -16,33 +16,36 @@ const Splash = () => {
   }, [user, isLoading, navigate]);
 
   return (
-    <div style={styles.container}>
-      <div className="animated" style={styles.card}>
-        <div style={styles.logoBadge}>🎓</div>
-        <h1 style={styles.title}>AI Aptitude Quiz Platform</h1>
-        <p style={styles.subtitle}>
+    <div className="min-h-[80vh] flex items-center justify-center p-4">
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 sm:p-10 max-w-xl w-full text-center shadow-xl flex flex-col items-center gap-4 sm:gap-6 animate-fadeIn">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-3xl sm:text-4xl shadow-sm">
+          🎓
+        </div>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[var(--text)] leading-tight">
+          AI Aptitude Quiz Platform
+        </h1>
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed max-w-md">
           Master your quantitative, logical, and analytical skills with personalized questions generated in real-time by Google Gemini.
         </p>
 
-        <div style={styles.featuresList}>
-          <div style={styles.featureItem}>
-            <Sparkles size={16} color="var(--primary)" />
+        <div className="flex flex-col items-start gap-2.5 my-2 text-xs sm:text-sm text-[var(--text)] font-medium">
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-[var(--primary)] shrink-0" />
             <span>5 adaptive difficulty levels</span>
           </div>
-          <div style={styles.featureItem}>
-            <Sparkles size={16} color="var(--primary)" />
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-[var(--primary)] shrink-0" />
             <span>Step-by-step cognitive explanations</span>
           </div>
-          <div style={styles.featureItem}>
-            <Sparkles size={16} color="var(--primary)" />
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-[var(--primary)] shrink-0" />
             <span>AI strengths & weaknesses analysis</span>
           </div>
         </div>
 
         <button 
-          className="btn btn-primary" 
+          className="btn btn-primary w-full sm:w-auto h-12 px-8 rounded-xl font-bold gap-2 text-sm shadow-sm cursor-pointer" 
           onClick={() => navigate('/login')}
-          style={{ gap: '10px', marginTop: '10px' }}
         >
           <span>Get Started</span>
           <ArrowRight size={18} />
@@ -50,69 +53,6 @@ const Splash = () => {
       </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    minHeight: '85vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '20px',
-  },
-  card: {
-    backgroundColor: 'var(--card)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius-lg)',
-    padding: '50px 40px',
-    maxWidth: '600px',
-    width: '100%',
-    textAlign: 'center',
-    boxShadow: '0 10px 30px var(--shadow-lg)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '20px',
-  },
-  logoBadge: {
-    width: '80px',
-    height: '80px',
-    borderRadius: '50%',
-    backgroundColor: 'var(--primary-light)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '40px',
-    boxShadow: '0 4px 12px var(--shadow)',
-  },
-  title: {
-    fontSize: '36px',
-    fontWeight: '800',
-    color: 'var(--text)',
-    lineHeight: '1.2',
-  },
-  subtitle: {
-    color: 'var(--text-secondary)',
-    fontSize: '15px',
-    lineHeight: '1.7',
-    maxWidth: '500px',
-  },
-  featuresList: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: '12px',
-    margin: '10px 0 20px 0',
-    alignSelf: 'center',
-  },
-  featureItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    fontSize: '14px',
-    fontWeight: '500',
-    color: 'var(--text)',
-  }
 };
 
 export default Splash;

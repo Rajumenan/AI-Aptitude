@@ -107,33 +107,32 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="animated" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="w-full space-y-6 sm:space-y-8 animate-fadeIn">
+      
       {/* Welcome Banner */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-secondary)' }}>Hello,</span>
-          <h1 style={{ fontSize: '32px', fontWeight: '800', marginTop: '2px' }}>{user?.username || 'Learner'} 👋</h1>
+          <span className="text-xs sm:text-sm font-medium text-[var(--text-secondary)]">Hello,</span>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black mt-1 text-[var(--text)]">
+            {user?.username || 'Learner'} 👋
+          </h1>
         </div>
 
         {/* Streak & Token Badges */}
         {!statsLoading && (
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{ 
-              display: 'flex', alignItems: 'center', gap: '6px', 
-              backgroundColor: '#FF6B3515', border: '1px solid #FF6B3540', 
-              padding: '8px 16px', borderRadius: '20px' 
-            }}>
-              <span style={{ fontSize: '16px' }}>🔥</span>
-              <span style={{ color: '#FF6B35', fontWeight: '700', fontSize: '14px' }}>{stats.currentStreak || 0} Day Streak</span>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 bg-[#FF6B3515] border border-[#FF6B3540] px-3 sm:px-4 py-2 rounded-full">
+              <span className="text-base sm:text-lg">🔥</span>
+              <span className="color-[#FF6B35] font-bold text-xs sm:text-sm text-[#FF6B35]">
+                {stats.currentStreak || 0} Day Streak
+              </span>
             </div>
             
-            <div style={{ 
-              display: 'flex', alignItems: 'center', gap: '6px', 
-              backgroundColor: '#F59E0B15', border: '1px solid #F59E0B40', 
-              padding: '8px 16px', borderRadius: '20px' 
-            }}>
-              <span style={{ fontSize: '16px' }}>🪙</span>
-              <span style={{ color: '#F59E0B', fontWeight: '700', fontSize: '14px' }}>{stats.tokens || 0} Tokens</span>
+            <div className="flex items-center gap-2 bg-[#F59E0B15] border border-[#F59E0B40] px-3 sm:px-4 py-2 rounded-full">
+              <span className="text-base sm:text-lg">🪙</span>
+              <span className="font-bold text-xs sm:text-sm text-[#F59E0B]">
+                {stats.tokens || 0} Tokens
+              </span>
             </div>
           </div>
         )}
@@ -143,57 +142,47 @@ const Dashboard = () => {
       {activeSession && (
         <div 
           onClick={resumeActiveQuiz}
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            padding: '16px 20px', 
-            borderRadius: 'var(--radius)', 
-            border: '1.5px solid var(--warning)', 
-            backgroundColor: 'var(--warning-light)',
-            cursor: 'pointer',
-            transition: 'var(--transition)'
-          }}
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl border-2 border-[var(--warning)] bg-[var(--warning-light)] cursor-pointer transition-all hover:shadow-md"
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <AlertTriangle color="var(--warning)" size={24} />
+          <div className="flex items-center gap-3 sm:gap-4">
+            <AlertTriangle className="text-[var(--warning)] shrink-0" size={24} />
             <div>
-              <h3 style={{ fontSize: '15px', fontWeight: '700' }}>Active Quiz in Progress</h3>
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+              <h3 className="text-sm sm:text-base font-bold text-[var(--text)]">Active Quiz in Progress</h3>
+              <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-0.5">
                 Continue your {activeSession.level} Quiz (Question {activeSession.currentQuestionNumber}/10)
               </p>
             </div>
           </div>
-          <button className="btn btn-primary" style={{ height: '36px', padding: '0 16px', fontSize: '13px', backgroundColor: 'var(--warning)', color: '#FFF' }}>
+          <button className="btn bg-[var(--warning)] text-white hover:opacity-90 w-full sm:w-auto h-9 px-4 text-xs sm:text-sm rounded-xl font-bold shrink-0">
             Resume Quiz
           </button>
         </div>
       )}
 
       {/* Performance statistics */}
-      <div style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: '0 4px 12px var(--shadow)' }}>
-        <h2 style={{ fontSize: '18px', marginBottom: '20px' }}>Your General Performance</h2>
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 sm:p-6 shadow-sm">
+        <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-4 text-[var(--text)]">Your General Performance</h2>
         {statsLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
+          <div className="flex justify-center py-8">
+            <div className="w-8 h-8 rounded-full border-4 border-[var(--border)] border-t-[var(--primary)] animate-spin" />
           </div>
         ) : (
-          <div className="stats-grid">
-            <div className="stats-card">
-              <span className="stats-num">{stats.totalQuizzes}</span>
-              <span className="stats-label">QUIZZES TAKEN</span>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+            <div className="stats-card w-full">
+              <span className="stats-num text-xl sm:text-2xl lg:text-3xl">{stats.totalQuizzes}</span>
+              <span className="stats-label text-[10px] sm:text-xs">QUIZZES TAKEN</span>
             </div>
-            <div className="stats-card">
-              <span className="stats-num">{stats.averageScore}/10</span>
-              <span className="stats-label">AVERAGE SCORE</span>
+            <div className="stats-card w-full">
+              <span className="stats-num text-xl sm:text-2xl lg:text-3xl">{stats.averageScore}/10</span>
+              <span className="stats-label text-[10px] sm:text-xs">AVERAGE SCORE</span>
             </div>
-            <div className="stats-card">
-              <span className="stats-num">{stats.averageAccuracy}%</span>
-              <span className="stats-label">TOTAL ACCURACY</span>
+            <div className="stats-card w-full">
+              <span className="stats-num text-xl sm:text-2xl lg:text-3xl">{stats.averageAccuracy}%</span>
+              <span className="stats-label text-[10px] sm:text-xs">TOTAL ACCURACY</span>
             </div>
-            <div className="stats-card">
-              <span className="stats-num">{stats.certificatesCount}</span>
-              <span className="stats-label">AWARDS WON</span>
+            <div className="stats-card w-full">
+              <span className="stats-num text-xl sm:text-2xl lg:text-3xl">{stats.certificatesCount}</span>
+              <span className="stats-label text-[10px] sm:text-xs">AWARDS WON</span>
             </div>
           </div>
         )}
@@ -201,30 +190,30 @@ const Dashboard = () => {
 
       {/* Quiz Levels */}
       <div>
-        <h2 style={{ fontSize: '20px', marginBottom: '16px' }}>Choose Quiz Level</h2>
+        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 text-[var(--text)]">Choose Quiz Level</h2>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '50px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 1s linear infinite', margin: '0 auto 15px auto' }} />
-            <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>AI Agent is assembling unique questions...</span>
+          <div className="text-center py-12">
+            <div className="w-10 h-10 rounded-full border-4 border-[var(--border)] border-t-[var(--primary)] animate-spin mx-auto mb-4" />
+            <span className="text-sm text-[var(--text-secondary)]">AI Agent is assembling unique questions...</span>
           </div>
         ) : (
-          <div className="levels-grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {levels.map((lvl) => {
               const Icon = lvl.icon;
               return (
                 <div 
                   key={lvl.name} 
-                  className="level-card"
+                  className="level-card group"
                   onClick={() => handleLevelPress(lvl.name)}
                 >
-                  <div className="level-icon-wrapper" style={{ backgroundColor: lvl.color + '15' }}>
+                  <div className="level-icon-wrapper shrink-0" style={{ backgroundColor: lvl.color + '15' }}>
                     <Icon size={24} color={lvl.color} />
                   </div>
-                  <div className="level-text-wrapper">
-                    <h3 className="level-title" style={{ color: 'var(--text)' }}>{lvl.name}</h3>
-                    <p className="level-desc">{lvl.description}</p>
+                  <div className="level-text-wrapper min-w-0">
+                    <h3 className="level-title truncate text-base sm:text-lg" style={{ color: 'var(--text)' }}>{lvl.name}</h3>
+                    <p className="level-desc line-clamp-2 text-xs sm:text-sm">{lvl.description}</p>
                   </div>
-                  <button className="btn btn-outline" style={{ height: '36px', width: '36px', borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <button className="btn btn-outline shrink-0 h-9 w-9 p-0 rounded-full flex items-center justify-center group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
                     <Play size={14} fill="currentColor" />
                   </button>
                 </div>

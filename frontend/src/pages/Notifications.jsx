@@ -47,22 +47,21 @@ const Notifications = () => {
   const getNotificationIcon = (type, isRead) => {
     const size = 18;
     if (type === 'Achievement') return <Trophy size={size} color="#F59E0B" fill={isRead ? 'none' : '#F59E0B'} />;
-    if (type === 'Quiz') return <BookOpen size={size} color={isRead ? 'var(--text-secondary)' : 'var(--primary)'} />;
-    return <AlertCircle size={size} color={isRead ? 'var(--text-secondary)' : 'var(--primary)'} />;
+    if (type === 'Quiz') return <BookOpen size={size} className={isRead ? 'text-[var(--text-secondary)]' : 'text-[var(--primary)]'} />;
+    return <AlertCircle size={size} className={isRead ? 'text-[var(--text-secondary)]' : 'text-[var(--primary)]'} />;
   };
 
   return (
-    <div className="animated" style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="w-full max-w-3xl mx-auto space-y-6 animate-fadeIn">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: '800' }}>Inbox Notifications</h1>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Track your unlocked milestones and quiz reports</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--text)]">Inbox Notifications</h1>
+          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">Track your unlocked milestones and quiz reports</p>
         </div>
         {notifications.length > 0 && (
           <button 
-            className="btn btn-outline" 
+            className="btn btn-outline h-9 px-3.5 text-xs gap-1.5 rounded-lg shrink-0 cursor-pointer self-start sm:self-auto" 
             onClick={handleMarkAllRead}
-            style={{ height: '36px', padding: '0 14px', fontSize: '12px', gap: '6px' }}
           >
             <Check size={14} />
             <span>Mark all read</span>
@@ -70,16 +69,16 @@ const Notifications = () => {
         )}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="space-y-3">
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <div style={{ width: '35px', height: '35px', borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+          <div className="text-center py-12">
+            <div className="w-8 h-8 rounded-full border-3 border-[var(--border)] border-t-[var(--primary)] animate-spin mx-auto" />
           </div>
         ) : notifications.length === 0 ? (
-          <div style={styles.emptyCard}>
-            <Bell size={48} color="var(--text-secondary)" style={{ opacity: 0.4, marginBottom: '15px' }} />
-            <h3 style={{ fontSize: '16px', fontWeight: '700' }}>All Caught Up</h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', textAlign: 'center' }}>
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-8 sm:p-12 flex flex-col items-center justify-center text-center shadow-xs">
+            <Bell size={48} className="text-[var(--text-secondary)] opacity-40 mb-3" />
+            <h3 className="text-base font-bold text-[var(--text)]">All Caught Up</h3>
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1 max-w-sm">
               You don't have any notifications right now. Keep practicing quizzes to trigger achievements!
             </p>
           </div>
@@ -88,51 +87,29 @@ const Notifications = () => {
             <div
               key={item._id}
               onClick={() => !item.isRead && handleMarkAsRead(item._id)}
-              style={{
-                backgroundColor: 'var(--card)',
-                border: '1.5px solid var(--border)',
-                borderLeft: `4px solid ${item.isRead ? 'var(--border)' : 'var(--primary)'}`,
-                borderRadius: 'var(--radius)',
-                padding: '16px 20px',
-                display: 'flex',
-                gap: '15px',
-                cursor: item.isRead ? 'default' : 'pointer',
-                boxShadow: item.isRead ? 'none' : '0 4px 8px var(--shadow)',
-                transition: 'var(--transition)'
-              }}
+              className={`p-4 sm:p-5 bg-[var(--card)] border border-[var(--border)] rounded-2xl flex gap-3.5 sm:gap-4 transition-all ${
+                item.isRead ? 'border-l-4 border-l-[var(--border)] shadow-none' : 'border-l-4 border-l-[var(--primary)] shadow-xs cursor-pointer'
+              }`}
             >
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                backgroundColor: 'var(--background)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
+              <div className="w-9 h-9 rounded-lg bg-[var(--background)] flex items-center justify-center shrink-0 mt-0.5">
                 {getNotificationIcon(item.type, item.isRead)}
               </div>
               
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                  <h4 style={{ 
-                    fontSize: '14px', 
-                    fontWeight: item.isRead ? '600' : '800',
-                    color: 'var(--text)'
-                  }}>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-center gap-2">
+                  <h4 className={`text-xs sm:text-sm truncate text-[var(--text)] ${item.isRead ? 'font-semibold' : 'font-extrabold'}`}>
                     {item.title}
                   </h4>
                   {!item.isRead && (
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--primary)', flexShrink: 0 }} />
+                    <div className="w-2 h-2 rounded-full bg-[var(--primary)] shrink-0" />
                   )}
                 </div>
                 
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: '1.5' }}>
+                <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1 leading-relaxed">
                   {item.message}
                 </p>
                 
-                <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginTop: '10px' }}>
+                <span className="text-[10px] font-semibold text-[var(--text-secondary)] block mt-2">
                   {new Date(item.createdAt).toLocaleDateString(undefined, {
                     month: 'short',
                     day: 'numeric',
@@ -147,20 +124,6 @@ const Notifications = () => {
       </div>
     </div>
   );
-};
-
-const styles = {
-  emptyCard: {
-    backgroundColor: 'var(--card)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius-lg)',
-    padding: '60px 40px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 4px 12px var(--shadow)',
-  }
 };
 
 export default Notifications;

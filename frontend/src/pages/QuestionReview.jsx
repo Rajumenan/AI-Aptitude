@@ -39,22 +39,22 @@ const QuestionReview = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', minHeight: '60vh', justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
+      <div className="flex min-h-[60vh] justify-center items-center">
+        <div className="w-10 h-10 rounded-full border-4 border-[var(--border)] border-t-[var(--primary)] animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="animated" style={styles.container}>
-      <div style={styles.header}>
-        <h1 style={{ fontSize: '28px', fontWeight: '800' }}>Question Review 🔍</h1>
-        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+    <div className="w-full max-w-3xl mx-auto space-y-6 animate-fadeIn">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--text)]">Question Review 🔍</h1>
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
           Evaluate your answers and learn from step-by-step logical explanations
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="space-y-3 sm:space-y-4">
         {review.map((item, index) => {
           const isExpanded = expandedIndex === index;
           const isCorrect = item.isCorrect;
@@ -62,105 +62,90 @@ const QuestionReview = () => {
           return (
             <div
               key={index}
-              style={{
-                backgroundColor: 'var(--card)',
-                border: '1.5px solid var(--border)',
-                borderLeft: `4px solid ${isCorrect ? 'var(--success)' : 'var(--danger)'}`,
-                borderRadius: 'var(--radius)',
-                overflow: 'hidden',
-                boxShadow: '0 4px 10px var(--shadow)',
-                transition: 'var(--transition)'
-              }}
+              className={`bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-xs transition-all ${
+                isCorrect ? 'border-l-4 border-l-[var(--success)]' : 'border-l-4 border-l-[var(--danger)]'
+              }`}
             >
               {/* Card Header Trigger */}
               <div 
                 onClick={() => toggleExpand(index)}
-                style={styles.cardHeader}
+                className="p-4 sm:p-5 flex items-center justify-between gap-3 cursor-pointer select-none"
               >
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--primary)' }}>QUESTION {index + 1}</span>
-                    <span style={styles.topicBadge}>{item.topic}</span>
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-[var(--primary)]">QUESTION {index + 1}</span>
+                    <span className="text-[10px] font-bold text-[var(--primary)] bg-[var(--primary-light)] px-2 py-0.5 rounded uppercase truncate">
+                      {item.topic}
+                    </span>
                   </div>
-                  <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', paddingRight: '15px' }} className="text-truncate">
+                  <p className="text-xs sm:text-sm font-semibold text-[var(--text)] truncate pr-2">
                     {item.questionText}
                   </p>
                 </div>
-                <div>
-                  {isExpanded ? <ChevronUp size={18} color="var(--text-secondary)" /> : <ChevronDown size={18} color="var(--text-secondary)" />}
+                <div className="shrink-0 text-[var(--text-secondary)]">
+                  {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                 </div>
               </div>
 
               {/* Collapsed Body Panel */}
               {isExpanded && (
-                <div style={styles.cardBody}>
+                <div className="p-4 sm:p-5 border-t border-[var(--border)] space-y-4">
                   {/* Full question */}
-                  <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '20px', color: 'var(--text)' }}>
+                  <div className="text-sm sm:text-base font-semibold leading-relaxed text-[var(--text)]">
                     {item.questionText}
                   </div>
 
                   {/* Options */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+                  <div className="space-y-2">
                     {Object.entries(item.options).map(([key, val]) => {
                       const isUserSelected = item.userAnswer === key;
                       const isCorrectAnswer = item.correctAnswer === key;
 
-                      let rowBg = 'var(--card)';
-                      let rowBorder = 'var(--border)';
-                      let keyColor = 'var(--text-secondary)';
+                      let rowStyle = 'bg-[var(--card)] border-[var(--border)]';
+                      let keyColor = 'text-[var(--text-secondary)]';
 
                       if (isCorrectAnswer) {
-                        rowBg = 'var(--success-light)';
-                        rowBorder = 'var(--success)';
-                        keyColor = 'var(--success)';
+                        rowStyle = 'bg-[var(--success-light)] border-[var(--success)]';
+                        keyColor = 'text-[var(--success)]';
                       } else if (isUserSelected && !isCorrect) {
-                        rowBg = 'var(--danger-light)';
-                        rowBorder = 'var(--danger)';
-                        keyColor = 'var(--danger)';
+                        rowStyle = 'bg-[var(--danger-light)] border-[var(--danger)]';
+                        keyColor = 'text-[var(--danger)]';
                       }
 
                       return (
                         <div
                           key={key}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '12px 16px',
-                            borderRadius: '8px',
-                            border: `1px solid ${rowBorder}`,
-                            backgroundColor: rowBg
-                          }}
+                          className={`flex items-center gap-3 p-3 rounded-xl border text-xs sm:text-sm ${rowStyle}`}
                         >
-                          <span style={{ fontSize: '13px', fontWeight: '700', color: keyColor }}>({key})</span>
-                          <span style={{ fontSize: '13px', color: 'var(--text)', flex: 1 }}>{val}</span>
-                          {isCorrectAnswer && <CheckCircle size={16} color="var(--success)" />}
-                          {isUserSelected && !isCorrect && <XCircle size={16} color="var(--danger)" />}
+                          <span className={`font-bold ${keyColor}`}>({key})</span>
+                          <span className="text-[var(--text)] flex-1">{val}</span>
+                          {isCorrectAnswer && <CheckCircle size={16} className="text-[var(--success)] shrink-0" />}
+                          {isUserSelected && !isCorrect && <XCircle size={16} className="text-[var(--danger)] shrink-0" />}
                         </div>
                       );
                     })}
                   </div>
 
                   {/* Meta comparisons */}
-                  <div style={styles.metaRow}>
+                  <div className="flex flex-wrap gap-6 pt-1 text-xs">
                     <div>
-                      <span style={styles.metaLabel}>Your Answer</span>
-                      <strong style={{ fontSize: '13px', color: isCorrect ? 'var(--success)' : 'var(--danger)' }}>
+                      <span className="block text-[var(--text-secondary)]">Your Answer</span>
+                      <strong className={`font-bold ${isCorrect ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                         {item.userAnswer ? `Option ${item.userAnswer}` : 'Skipped'}
                       </strong>
                     </div>
                     <div>
-                      <span style={styles.metaLabel}>Correct Answer</span>
-                      <strong style={{ fontSize: '13px', color: 'var(--success)' }}>
+                      <span className="block text-[var(--text-secondary)]">Correct Answer</span>
+                      <strong className="font-bold text-[var(--success)]">
                         Option {item.correctAnswer}
                       </strong>
                     </div>
                   </div>
 
                   {/* Explanation card */}
-                  <div style={styles.explanationBox}>
-                    <h4 style={{ fontSize: '13px', fontWeight: '700', marginBottom: '6px' }}>AI Explanation:</h4>
-                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-[var(--background)] border border-[var(--border)] space-y-1">
+                    <h4 className="text-xs font-bold text-[var(--text)]">AI Explanation:</h4>
+                    <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
                       {item.explanation}
                     </p>
                   </div>
@@ -172,62 +157,13 @@ const QuestionReview = () => {
       </div>
 
       <button 
-        className="btn btn-outline"
+        className="btn btn-outline w-full h-12 rounded-xl text-sm font-bold mt-4"
         onClick={() => navigate(`/results/${sessionId}`, { state: { level } })}
-        style={{ width: '100%', marginTop: '20px' }}
       >
         Back to Scorecard
       </button>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    maxWidth: '800px',
-    margin: '0 auto',
-    paddingVertical: '15px',
-  },
-  header: {
-    marginBottom: '24px',
-  },
-  cardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '16px 20px',
-    cursor: 'pointer',
-  },
-  topicBadge: {
-    fontSize: '9px',
-    fontWeight: '700',
-    color: 'var(--primary)',
-    backgroundColor: 'var(--primary-light)',
-    padding: '2px 8px',
-    borderRadius: '4px',
-    textTransform: 'uppercase',
-  },
-  cardBody: {
-    padding: '20px',
-    borderTop: '1px solid var(--border)',
-  },
-  metaRow: {
-    display: 'flex',
-    gap: '30px',
-    marginBottom: '20px',
-  },
-  metaLabel: {
-    display: 'block',
-    fontSize: '11px',
-    color: 'var(--text-secondary)',
-    marginBottom: '2px',
-    fontWeight: '500',
-  },
-  explanationBox: {
-    padding: '16px',
-    borderRadius: '8px',
-    backgroundColor: 'var(--background)',
-  }
 };
 
 export default QuestionReview;

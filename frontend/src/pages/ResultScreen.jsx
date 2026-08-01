@@ -40,9 +40,9 @@ const ResultScreen = () => {
 
   if (loading || !result) {
     return (
-      <div style={{ display: 'flex', minHeight: '60vh', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '15px' }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
-        <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Assembling scorecard & AI analysis report...</span>
+      <div className="flex min-h-[60vh] flex-col justify-center items-center gap-3">
+        <div className="w-10 h-10 rounded-full border-4 border-[var(--border)] border-t-[var(--primary)] animate-spin" />
+        <span className="text-xs sm:text-sm text-[var(--text-secondary)]">Assembling scorecard & AI analysis report...</span>
       </div>
     );
   }
@@ -50,35 +50,35 @@ const ResultScreen = () => {
   const { scorecard, certificateEarned } = result;
 
   return (
-    <div className="animated" style={styles.container}>
+    <div className="w-full max-w-xl mx-auto space-y-6 animate-fadeIn">
       {/* Header Badge */}
-      <div style={styles.header}>
-        <span style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '2.5px', color: 'var(--primary)', display: 'block', marginBottom: '6px' }}>
-          {scorecard.performanceRating.toUpperCase()}
+      <div className="text-center space-y-1">
+        <span className="text-[10px] font-black tracking-widest text-[var(--primary)] block uppercase">
+          {scorecard.performanceRating}
         </span>
-        <h1 style={{ fontSize: '32px', fontWeight: '800' }}>Quiz Complete! 🏁</h1>
-        <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>You completed the {level || scorecard.level} Level Quiz</p>
+        <h1 className="text-2xl sm:text-3xl font-black text-[var(--text)]">Quiz Complete! 🏁</h1>
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)]">You completed the {level || scorecard.level} Level Quiz</p>
       </div>
 
       {/* Circle Score Container */}
-      <div style={styles.scoreRow}>
-        <div style={styles.circle}>
-          <span style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text)' }}>{scorecard.score}</span>
-          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', marginTop: '-4px' }}>/10</span>
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 shadow-sm">
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 sm:border-5 border-[var(--primary)] flex flex-col items-center justify-center shrink-0">
+          <span className="text-2xl sm:text-3xl font-black text-[var(--text)]">{scorecard.score}</span>
+          <span className="text-xs font-bold text-[var(--text-secondary)] -mt-1">/10</span>
         </div>
-        <div>
-          <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--primary)' }}>{scorecard.percentage}% Accuracy</h2>
-          <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Overall correctness score</span>
+        <div className="text-center sm:text-left">
+          <h2 className="text-xl sm:text-2xl font-black text-[var(--primary)]">{scorecard.percentage}% Accuracy</h2>
+          <span className="text-xs text-[var(--text-secondary)]">Overall correctness score</span>
         </div>
       </div>
 
       {/* Certificate Unlocked Banner */}
       {certificateEarned && (
-        <div style={styles.certBanner}>
-          <Award size={28} color="#F59E0B" fill="#F59E0B" style={{ flexShrink: 0 }} />
+        <div className="flex items-start gap-3.5 p-4 rounded-xl border border-[#F59E0B] bg-[#FFFBF0] text-gray-900">
+          <Award size={28} className="text-[#F59E0B] shrink-0 mt-0.5" fill="#F59E0B" />
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: '800' }}>Certificate Unlocked! 🏆</h3>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: '1.4' }}>
+            <h3 className="text-sm font-black text-gray-900">Certificate Unlocked! 🏆</h3>
+            <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
               Congratulations! You scored &ge; 70% in this session. Your Certificate of Achievement has been unlocked in your profile.
             </p>
           </div>
@@ -86,33 +86,30 @@ const ResultScreen = () => {
       )}
 
       {/* Stats Table List */}
-      <div style={styles.statsCard}>
-        <div style={styles.statsRow}>
-          <span style={styles.statsLabel}>Correct Answers</span>
-          <span style={{ fontWeight: '700', color: 'var(--success)' }}>{scorecard.correctAnswers}</span>
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-4 sm:p-5 shadow-sm space-y-3 text-xs sm:text-sm">
+        <div className="flex justify-between items-center">
+          <span className="text-[var(--text-secondary)] font-medium">Correct Answers</span>
+          <span className="font-bold text-[var(--success)]">{scorecard.correctAnswers}</span>
         </div>
-        <div style={styles.line} />
-        <div style={styles.statsRow}>
-          <span style={styles.statsLabel}>Incorrect Answers</span>
-          <span style={{ fontWeight: '700', color: 'var(--danger)' }}>{scorecard.incorrectAnswers}</span>
+        <div className="border-t border-[var(--border)] pt-3 flex justify-between items-center">
+          <span className="text-[var(--text-secondary)] font-medium">Incorrect Answers</span>
+          <span className="font-bold text-[var(--danger)]">{scorecard.incorrectAnswers}</span>
         </div>
-        <div style={styles.line} />
-        <div style={styles.statsRow}>
-          <span style={styles.statsLabel}>Time Taken</span>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: '700' }}>
-            <Clock size={14} color="var(--text-secondary)" />
+        <div className="border-t border-[var(--border)] pt-3 flex justify-between items-center">
+          <span className="text-[var(--text-secondary)] font-medium">Time Taken</span>
+          <div className="inline-flex items-center gap-1.5 font-bold text-[var(--text)]">
+            <Clock size={14} className="text-[var(--text-secondary)]" />
             <span>{formatTime(scorecard.timeTaken)}</span>
           </div>
         </div>
       </div>
 
       {/* Navigation Triggers */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="space-y-3 pt-2">
         {/* AI Performance Analysis */}
         <button 
-          className="btn btn-primary"
+          className="btn btn-primary w-full h-12 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
           onClick={() => navigate(`/analysis/${sessionId}`, { state: { level } })}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%' }}
         >
           <Sparkles size={16} />
           <span>AI Performance Analysis</span>
@@ -120,9 +117,8 @@ const ResultScreen = () => {
 
         {/* Question Review */}
         <button 
-          className="btn btn-outline"
+          className="btn btn-outline w-full h-12 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
           onClick={() => navigate(`/review/${sessionId}`, { state: { level } })}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%' }}
         >
           <FileText size={16} />
           <span>Review Questions</span>
@@ -131,89 +127,13 @@ const ResultScreen = () => {
         {/* Back to Dashboard */}
         <button 
           onClick={() => navigate('/dashboard')}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--primary)',
-            fontSize: '14px',
-            fontWeight: '700',
-            cursor: 'pointer',
-            padding: '12px',
-            alignSelf: 'center',
-            marginTop: '10px'
-          }}
+          className="w-full py-3 text-sm font-bold text-[var(--primary)] hover:underline text-center cursor-pointer block"
         >
           Back to Dashboard
         </button>
       </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    maxWidth: '600px',
-    margin: '0 auto',
-    paddingVertical: '15px',
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: '30px',
-  },
-  scoreRow: {
-    backgroundColor: 'var(--card)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius-lg)',
-    padding: '24px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '24px',
-    marginBottom: '20px',
-    boxShadow: '0 4px 12px var(--shadow)',
-  },
-  circle: {
-    width: '80px',
-    height: '80px',
-    borderRadius: '50%',
-    border: '5px solid var(--primary)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  certBanner: {
-    display: 'flex',
-    gap: '15px',
-    padding: '16px 20px',
-    borderRadius: 'var(--radius)',
-    border: '1.5px solid #F59E0B',
-    backgroundColor: '#FFFBF0',
-    marginBottom: '20px',
-  },
-  statsCard: {
-    backgroundColor: 'var(--card)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius-lg)',
-    padding: '20px 24px',
-    marginBottom: '24px',
-    boxShadow: '0 4px 10px var(--shadow)',
-  },
-  statsRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    fontSize: '14px',
-  },
-  statsLabel: {
-    color: 'var(--text-secondary)',
-    fontWeight: '500',
-  },
-  line: {
-    height: '1px',
-    backgroundColor: 'var(--border)',
-    margin: '12px 0',
-  }
 };
 
 export default ResultScreen;

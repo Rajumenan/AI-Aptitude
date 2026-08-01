@@ -235,6 +235,29 @@ if (isGeminiEnabled()) {
   genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 }
 
+// @desc    Check if two question texts are too similar (basic deduplication)
+// @param   newQuestion: String, previousList: Array of strings
+function isTooSimilar(newQuestion, previousList) {
+  if (!newQuestion || previousList.length === 0) return false;
+  // Normalize: lowercase, strip punctuation and extra spaces
+  const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+  const normalizedNew = normalize(newQuestion);
+
+  for (const prev of previousList) {
+    const normalizedPrev = normalize(prev);
+    // Check if they share more than 70% of words (sliding window approach)
+    const newWords = new Set(normalizedNew.split(' '));
+    const prevWords = normalizedPrev.split(' ');
+    const commonWords = prevWords.filter(w => newWords.has(w) && w.length > 3);
+    const similarity = commonWords.length / Math.max(newWords.size, prevWords.length);
+    if (similarity > 0.7) {
+      console.warn(`[AI SERVICE] Duplicate detected (similarity: ${(similarity * 100).toFixed(0)}%). Retrying...`);
+      return true;
+    }
+  }
+  return false;
+}
+
 // @desc    Generate a single aptitude question using Gemini
 // @param   level: String, previousQuestionsList: Array of strings
 exports.generateAIQuestion = async (level, previousQuestionsList = []) => {
@@ -243,67 +266,113 @@ exports.generateAIQuestion = async (level, previousQuestionsList = []) => {
     return getFallbackQuestion(level, previousQuestionsList);
   }
 
-  try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const MAX_RETRIES = 3;
 
-    const schema = {
-      type: 'object',
-      properties: {
-        questionText: { type: 'string', description: 'The text of the aptitude question.' },
-        options: {
-          type: 'object',
-          properties: {
-            A: { type: 'string' },
-            B: { type: 'string' },
-            C: { type: 'string' },
-            D: { type: 'string' }
-          },
-          required: ['A', 'B', 'C', 'D']
+  const schema = {
+    type: 'object',
+    properties: {
+      questionText: { type: 'string', description: 'The text of the aptitude question.' },
+      options: {
+        type: 'object',
+        properties: {
+          A: { type: 'string' },
+          B: { type: 'string' },
+          C: { type: 'string' },
+          D: { type: 'string' }
         },
-        correctOption: { type: 'string', enum: ['A', 'B', 'C', 'D'], description: 'The correct choice.' },
-        explanation: { type: 'string', description: 'Detailed, step-by-step mathematical or logical explanation.' },
-        topic: { type: 'string', description: 'The specific sub-topic (e.g. Percentages, Time & Work, Calendars).' }
+        required: ['A', 'B', 'C', 'D']
       },
-      required: ['questionText', 'options', 'correctOption', 'explanation', 'topic']
-    };
+      correctOption: { type: 'string', enum: ['A', 'B', 'C', 'D'], description: 'The correct choice.' },
+      explanation: { type: 'string', description: 'Detailed, step-by-step mathematical or logical explanation.' },
+      topic: { type: 'string', description: 'The specific sub-topic (e.g. Percentages, Time & Work, Calendars).' }
+    },
+    required: ['questionText', 'options', 'correctOption', 'explanation', 'topic']
+  };
 
-    // Construct previous questions context to prevent duplication
-    const previousQuestionsContext = previousQuestionsList.length > 0 
-      ? `To ensure uniqueness, DO NOT generate any questions similar to these already-asked questions: \n${previousQuestionsList.map((q, idx) => `${idx + 1}. ${q}`).join('\n')}`
-      : 'This is the first question in the quiz.';
+  // Extract already-used topics so the AI avoids repeating them if possible
+  // (For the quiz controller, previousQuestionsList is an array of question text strings,
+  //  so we also accept an array of objects for richer context)
+  const isObjectList = previousQuestionsList.length > 0 && typeof previousQuestionsList[0] === 'object';
+  const questionTexts = isObjectList
+    ? previousQuestionsList.map(q => q.questionText)
+    : previousQuestionsList;
 
-    const systemPrompt = `You are an AI Aptitude Quiz Agent. Generate a unique aptitude question for the level: ${level}.
-    
-## DIFFICULTY DETAILS:
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+      // Build a strongly-worded anti-duplication context
+      let previousQuestionsContext;
+      if (questionTexts.length === 0) {
+        previousQuestionsContext = 'This is the FIRST question in the quiz session.';
+      } else {
+        previousQuestionsContext = [
+          `ALREADY ASKED QUESTIONS (${questionTexts.length} total) — You MUST NOT repeat or rephrase ANY of these:`,
+          ...questionTexts.map((q, idx) => `  ${idx + 1}. "${q}"`)
+        ].join('\n');
+      }
+
+      // On retries, explicitly ask for a completely different topic
+      const retryNote = attempt > 1
+        ? `IMPORTANT: Your previous attempt was rejected for being too similar. Attempt #${attempt}: Pick a COMPLETELY DIFFERENT topic and scenario from ALL previous questions.`
+        : '';
+
+      const systemPrompt = `You are an AI Aptitude Quiz Agent. Generate ONE unique, original aptitude question for difficulty level: "${level}".
+
+## DIFFICULTY TOPICS:
 - Basic: Arithmetic, Percentages, Ratio, Profit & Loss, Average, Simple Interest, Time & Work, Number Series, Alphabet Series, Basic Reasoning
 - Intermediate: Probability, Compound Interest, Data Interpretation, Coding-Decoding, Blood Relations, Clocks, Calendars, Syllogism, Seating Arrangement
 - Advance: Advanced Aptitude, Critical Reasoning, Data Sufficiency, Puzzles, Statement & Assumption, Caselet DI, Number Theory
-- Company Related: TCS, Infosys, Wipro, Accenture, Cognizant, Capgemini, Deloitte, IBM, HCL placement questions
-- Government Exams: SSC, UPSC CSAT, Banking, SBI, IBPS, RRB, TNPSC, Railway, State PSC questions
+- Company Related: TCS, Infosys, Wipro, Accenture, Cognizant, Capgemini, Deloitte, IBM, HCL placement test questions
+- Government Exams: SSC CGL, UPSC CSAT, Banking PO, SBI Clerk, IBPS, RRB, TNPSC, Railway RRB questions
 
-## CRITICAL RULES:
-- The question must have clear logic and one indisputable correct answer.
-- ${previousQuestionsContext}
-- All options (A, B, C, D) must contain plausible values or distractors.
-- Provide a clear, detailed, step-by-step mathematical or logical explanation in the "explanation" property.`;
+## STRICT UNIQUENESS RULES (MANDATORY):
+${previousQuestionsContext}
 
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: systemPrompt }] }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: schema,
-        temperature: 0.7
+- The question scenario, numbers, and topic MUST be different from ALL previous questions above.
+- Do NOT reuse the same formula, variable names, or context (e.g., don't generate two train/speed problems or two percentage problems in a row if one was already asked).
+- The question must have exactly ONE indisputable correct answer.
+- All 4 options (A, B, C, D) must contain plausible numerical or logical distractors.
+- Provide a detailed, step-by-step explanation in the "explanation" field.
+${retryNote}`;
+
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: systemPrompt }] }],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseSchema: schema,
+          temperature: 1.0  // Higher temperature = more varied, less repetitive output
+        }
+      });
+
+      const responseText = result.response.text();
+      const question = JSON.parse(responseText);
+
+      // Post-generation deduplication check
+      if (isTooSimilar(question.questionText, questionTexts)) {
+        console.warn(`[AI SERVICE] Attempt ${attempt}/${MAX_RETRIES}: Question too similar, retrying...`);
+        if (attempt === MAX_RETRIES) {
+          // All retries failed — fall back to local bank
+          console.warn('[AI SERVICE] All retries exhausted. Using fallback question bank.');
+          return getFallbackQuestion(level, questionTexts);
+        }
+        continue; // Try again
       }
-    });
 
-    const responseText = result.response.text();
-    return JSON.parse(responseText);
+      console.log(`[AI SERVICE] Generated unique question on attempt ${attempt}: "${question.topic}"`);
+      return question;
 
-  } catch (error) {
-    console.error('[AI SERVICE] Gemini Question Generation Error:', error.message);
-    console.log('Falling back to local question bank.');
-    return getFallbackQuestion(level, previousQuestionsList);
+    } catch (error) {
+      console.error(`[AI SERVICE] Gemini Question Generation Error (attempt ${attempt}):`, error.message);
+      if (attempt === MAX_RETRIES) {
+        console.log('[AI SERVICE] Falling back to local question bank.');
+        return getFallbackQuestion(level, questionTexts);
+      }
+    }
   }
+
+  // Should never reach here
+  return getFallbackQuestion(level, questionTexts);
 };
 
 // @desc    Generate a contextual hint for a quiz question using Gemini

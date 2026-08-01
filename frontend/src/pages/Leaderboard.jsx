@@ -30,7 +30,7 @@ const Leaderboard = () => {
     if (rank === 1) return <Trophy size={18} color="#F59E0B" fill="#F59E0B" />;
     if (rank === 2) return <Medal size={18} color="#9CA3AF" fill="#9CA3AF" />;
     if (rank === 3) return <Medal size={18} color="#B45309" fill="#B45309" />;
-    return <span style={{ fontWeight: '700', color: 'var(--text-secondary)' }}>{rank}</span>;
+    return <span className="font-bold text-[var(--text-secondary)]">{rank}</span>;
   };
 
   const formatTime = (seconds) => {
@@ -40,33 +40,25 @@ const Leaderboard = () => {
   };
 
   return (
-    <div className="animated" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="w-full space-y-6 animate-fadeIn">
       <div>
-        <h1 style={{ fontSize: '28px', fontWeight: '800' }}>Global Standings</h1>
-        <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Compete with learners worldwide for the top spot</p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--text)]">Global Standings</h1>
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">Compete with learners worldwide for the top spot</p>
       </div>
 
       {/* Horizontal Tabs */}
-      <div style={styles.tabsContainer}>
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none max-w-full">
         {levels.map((lvl) => {
           const isSelected = selectedLevel === lvl;
           return (
             <button
               key={lvl}
               onClick={() => setSelectedLevel(lvl)}
-              className="btn"
-              style={{
-                height: '40px',
-                borderRadius: '20px',
-                padding: '0 20px',
-                fontSize: '13px',
-                border: '1px solid var(--border)',
-                backgroundColor: isSelected ? 'var(--primary)' : 'var(--card)',
-                color: isSelected ? '#FFF' : 'var(--text)',
-                boxShadow: isSelected ? '0 4px 10px rgba(98,0,238,0.2)' : 'none',
-                cursor: 'pointer',
-                transition: 'var(--transition)'
-              }}
+              className={`whitespace-nowrap h-10 px-4 sm:px-5 text-xs sm:text-sm rounded-full border transition-all cursor-pointer font-semibold shrink-0 ${
+                isSelected 
+                  ? 'bg-[var(--primary)] text-white border-[var(--primary)] shadow-md' 
+                  : 'bg-[var(--card)] text-[var(--text)] border-[var(--border)] hover:border-[var(--primary)]'
+              }`}
             >
               {lvl}
             </button>
@@ -74,82 +66,56 @@ const Leaderboard = () => {
         })}
       </div>
 
-      {/* Rankings Board Table */}
-      <div style={styles.tableWrapper}>
+      {/* Rankings Board Table Container */}
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm">
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <div style={{ width: '35px', height: '35px', borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+          <div className="text-center py-12">
+            <div className="w-8 h-8 rounded-full border-3 border-[var(--border)] border-t-[var(--primary)] animate-spin mx-auto" />
           </div>
         ) : rankings.length === 0 ? (
-          <div style={styles.emptyContainer}>
-            <Trophy size={48} color="var(--text-secondary)" style={{ opacity: 0.4, marginBottom: '15px' }} />
-            <h3 style={{ fontSize: '16px', fontWeight: '700' }}>No Rankings Recorded</h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', textAlign: 'center' }}>
+          <div className="py-12 px-6 flex flex-col items-center justify-center text-center">
+            <Trophy size={48} className="text-[var(--text-secondary)] opacity-40 mb-3" />
+            <h3 className="text-base font-bold text-[var(--text)]">No Rankings Recorded</h3>
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1 max-w-sm">
               Be the first to complete a quiz at this level and lock in your score!
             </p>
           </div>
         ) : (
-          <table style={styles.table}>
-            <thead>
-              <tr style={{ borderBottom: '1.5px solid var(--border)', textAlign: 'left' }}>
-                <th style={{ padding: '14px 16px', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>RANK</th>
-                <th style={{ padding: '14px 16px', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>USER</th>
-                <th style={{ padding: '14px 16px', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', textAlign: 'center' }}>TIME</th>
-                <th style={{ padding: '14px 16px', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', textAlign: 'right' }}>SCORE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rankings.map((item, index) => (
-                <tr key={index} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {renderRankBadge(item.rank)}
-                  </td>
-                  <td style={{ padding: '16px', fontWeight: '600' }}>{item.username}</td>
-                  <td style={{ padding: '16px', textAlign: 'center', fontSize: '14px' }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-                      <Clock size={14} />
-                      <span>{formatTime(item.timeTaken)}</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '16px', textAlign: 'right', fontWeight: '700', color: 'var(--primary)', fontSize: '17px' }}>
-                    {item.score}<span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>/10</span>
-                  </td>
+          <div className="w-full overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[500px]">
+              <thead>
+                <tr className="border-b border-[var(--border)] bg-[var(--background)]">
+                  <th className="py-3 px-4 text-xs font-bold text-[var(--text-secondary)]">RANK</th>
+                  <th className="py-3 px-4 text-xs font-bold text-[var(--text-secondary)]">USER</th>
+                  <th className="py-3 px-4 text-xs font-bold text-[var(--text-secondary)] text-center">TIME</th>
+                  <th className="py-3 px-4 text-xs font-bold text-[var(--text-secondary)] text-right">SCORE</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {rankings.map((item, index) => (
+                  <tr key={index} className="hover:bg-[var(--primary-light)]/40 transition-colors">
+                    <td className="py-4 px-4 flex items-center gap-2">
+                      {renderRankBadge(item.rank)}
+                    </td>
+                    <td className="py-4 px-4 font-semibold text-sm text-[var(--text)]">{item.username}</td>
+                    <td className="py-4 px-4 text-center text-xs sm:text-sm">
+                      <div className="inline-flex items-center gap-1.5 text-[var(--text-secondary)]">
+                        <Clock size={14} />
+                        <span>{formatTime(item.timeTaken)}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-right font-bold text-[var(--primary)] text-base sm:text-lg">
+                      {item.score}<span className="text-xs font-normal text-[var(--text-secondary)]">/10</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
   );
-};
-
-const styles = {
-  tabsContainer: {
-    display: 'flex',
-    gap: '10px',
-    overflowX: 'auto',
-    paddingBottom: '5px',
-    scrollbarWidth: 'none',
-  },
-  tableWrapper: {
-    backgroundColor: 'var(--card)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius-lg)',
-    overflow: 'hidden',
-    boxShadow: '0 4px 12px var(--shadow)',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-  },
-  emptyContainer: {
-    padding: '60px 40px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-  }
 };
 
 export default Leaderboard;
