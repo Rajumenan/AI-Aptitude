@@ -1,6 +1,6 @@
 // Let's use standard localStorage wrappers for simplicity and compatibility!
 
-export const API_URL = 'http://localhost:5000';
+export const API_URL = 'https://ai-aptitude-wdn5.onrender.com';
 
 let cachedAccessToken = null;
 
@@ -12,7 +12,7 @@ export const getCachedToken = () => cachedAccessToken;
 
 const request = async (endpoint, options = {}) => {
   const url = `${API_URL}${endpoint}`;
-  
+
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,

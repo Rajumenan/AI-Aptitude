@@ -21,7 +21,7 @@ const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
-// Helper to update daily login streak
+// Helper to update daily login streak and tokens
 const updateLoginStreak = (user) => {
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
@@ -44,6 +44,14 @@ const updateLoginStreak = (user) => {
     if (currentStreak > (user.longestStreak || 0)) {
       user.longestStreak = currentStreak;
     }
+
+    // Award tokens based on the current streak (10 on day 7, 14, 21... otherwise 2)
+    if (currentStreak % 7 === 0) {
+      user.tokens = (user.tokens || 0) + 10;
+    } else {
+      user.tokens = (user.tokens || 0) + 2;
+    }
+
     user.lastLoginDate = now;
   }
 };
