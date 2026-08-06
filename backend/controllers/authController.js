@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const Settings = require('../models/Settings');
 const { generateOTP, hashOTP, getOTPExpiry, canResendOTP, getResendCooldownSeconds } = require('../utils/otp');
@@ -67,14 +68,13 @@ const issueAndSendOTP = async (user, emailType = 'verification') => {
   user.otpLastSentAt = new Date();           // Record send timestamp for rate-limiting
   await user.save();
 
-  // Attempt email delivery — log fallback on failure
-  try {
-    await sendOTPEmail(user.email, plainOTP, emailType);
-  } catch (emailErr) {
-    // Do not fail the API call if email fails — log and continue
+  // Attempt email delivery asynchronously in the background so it doesn't block the request
+  sendOTPEmail(user.email, plainOTP, emailType).catch((emailErr) => {
     console.error(`[Email] Failed to send OTP email to ${user.email}:`, emailErr.message);
-    console.log(`[DEV FALLBACK] OTP for ${user.email}: ${plainOTP}`);
-  }
+  });
+
+  // Log the dev fallback OTP immediately with high visibility so developers can locate it instantly in the console
+  console.log(`\n🔑 ==========================================\n🔑 [DEV FALLBACK] OTP for ${user.email}: ${plainOTP}\n🔑 ==========================================\n`);
 };
 
 // @desc    Register a new user
@@ -412,6 +412,180 @@ exports.resetPassword = async (req, res) => {
     console.error('Reset Password Error:', error.message);
     res.status(500).json({ success: false, message: 'Server error during password reset' });
   }
+};
+
+// @desc    Resend OTP (verification or reset)
+// @route   POST /api/auth/resend-otp
+// @access  Public
+exports.resendOtp = async (req, res) => {
+  try {
+    const { email, type = 'verification' } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Please provide email' });
+    }
+
+    const user = await User.findOne({ email }).select('+otp');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // If verification OTP is requested, but user is already verified
+    if (type === 'verification' && user.isVerified) {
+      return res.status(400).json({ success: false, message: 'Email is already verified. Please log in.' });
+    }
+
+    // Enforce rate limit (1 OTP per 60 seconds)
+    if (!canResendOTP(user.otpLastSentAt)) {
+      const secs = getResendCooldownSeconds(user.otpLastSentAt);
+      return res.status(429).json({
+        success: false,
+        message: `Please wait ${secs} seconds before requesting a new OTP.`
+      });
+    }
+
+    // Issue and send OTP
+    await issueAndSendOTP(user, type);
+
+    res.status(200).json({
+      success: true,
+      message: `A new ${type} OTP has been sent to your email.`,
+      email
+    });
+  } catch (error) {
+    console.error('Resend OTP Error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error during OTP resend' });
+  }
+};
+
+const generateUniqueUsername = async (email, name) => {
+  let base = (name || email.split('@')[0])
+    .replace(/[^a-zA-Z0-9]/g, '') // strip special characters
+    .slice(0, 15); // limit length to keep space for counter suffix
+
+  if (!base) {
+    base = 'learner';
+  }
+
+  let username = base;
+  let counter = 1;
+
+  while (await User.findOne({ username })) {
+    username = `${base}${counter}`;
+    counter++;
+  }
+
+  return username;
+};
+
+// @desc    Google OAuth Login & Automatic Registration
+// @route   POST /api/auth/google-login
+// @access  Public
+exports.googleLogin = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Google credential ID token is required' });
+    }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      console.warn('[Google Auth] GOOGLE_CLIENT_ID is not configured in backend .env');
+      return res.status(500).json({ success: false, message: 'Google Authentication is currently unconfigured on the server' });
+    }
+
+    const client = new OAuth2Client(clientId);
+    let payload;
+
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: clientId,
+      });
+      payload = ticket.getPayload();
+    } catch (verifyErr) {
+      console.error('Google ID token verification failed:', verifyErr.message);
+      return res.status(401).json({ success: false, message: 'Invalid Google credential token' });
+    }
+
+    const { sub: googleId, email, name, picture } = payload;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Google account does not provide an email address' });
+    }
+
+    // 1. Search for user by googleId
+    let user = await User.findOne({ googleId });
+
+    if (!user) {
+      // 2. Fallback search by email
+      user = await User.findOne({ email });
+
+      if (user) {
+        // Link Google account
+        user.googleId = googleId;
+        if (!user.profilePicture) {
+          user.profilePicture = picture;
+        }
+        await user.save();
+        console.log(`[Google Auth] Linked Google account for existing email: ${email}`);
+      } else {
+        // 3. Register a new user automatically
+        const username = await generateUniqueUsername(email, name);
+        user = new User({
+          username,
+          email,
+          googleId,
+          profilePicture: picture,
+          isVerified: true // Google accounts are pre-verified
+        });
+        await user.save();
+
+        // Create default settings entry
+        await Settings.create({ userId: user._id });
+        console.log(`[Google Auth] Created new user: ${username} (${email})`);
+      }
+    } else {
+      // User exists. Ensure profile picture is updated if changed
+      if (picture && user.profilePicture !== picture) {
+        user.profilePicture = picture;
+        await user.save();
+      }
+    }
+
+    updateLoginStreak(user);
+
+    const { accessToken, refreshToken } = generateTokens(user._id);
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        profilePicture: user.profilePicture,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Google Login Error:', error.stack || error.message);
+    res.status(500).json({ success: false, message: 'Server error during Google authentication' });
+  }
+};
+
+// @desc    Get Google Client ID for frontend initialization
+// @route   GET /api/auth/google-client-id
+// @access  Public
+exports.getGoogleClientId = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    clientId: process.env.GOOGLE_CLIENT_ID || null
+  });
 };
 
 // @desc    Logout — Clear Refresh Token

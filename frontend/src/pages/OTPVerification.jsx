@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 
 const OTPVerification = () => {
-  const { verifyOtp, resetPassword } = useAuth();
+  const { verifyOtp, resetPassword, resendOtp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -15,6 +15,32 @@ const OTPVerification = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    let timer;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const handleResendOtp = async () => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      setLoading(true);
+      const res = await resendOtp(email, isPasswordReset ? 'reset' : 'verification');
+      if (res.success) {
+        setSuccessMsg(res.message || 'OTP resent successfully!');
+        setResendCooldown(60); // 60 seconds cooldown
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to resend OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!email) {
@@ -120,6 +146,31 @@ const OTPVerification = () => {
             {loading ? 'Verifying...' : isPasswordReset ? 'Update Password' : 'Verify & Log In'}
           </button>
         </form>
+
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+          Didn't receive the OTP?{' '}
+          {resendCooldown > 0 ? (
+            <span style={{ fontWeight: '700', color: 'var(--text-muted)' }}>
+              Resend in {resendCooldown}s
+            </span>
+          ) : (
+            <button 
+              onClick={handleResendOtp} 
+              disabled={loading} 
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                fontWeight: '700', 
+                color: 'var(--primary)', 
+                cursor: 'pointer', 
+                padding: 0,
+                textDecoration: 'underline'
+              }}
+            >
+              Resend OTP
+            </button>
+          )}
+        </div>
 
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
           <Link to="/login" style={{ fontSize: '14px', fontWeight: '700', color: 'var(--primary)', textDecoration: 'none' }}>

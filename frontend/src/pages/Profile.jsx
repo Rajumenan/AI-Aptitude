@@ -84,9 +84,18 @@ const Profile = () => {
       
       {/* Profile Info Header */}
       <div className="flex flex-col items-center p-6 bg-[var(--card)] border border-[var(--border)] rounded-2xl shadow-sm">
-        <div className="w-16 h-16 rounded-full bg-[var(--primary-light)] flex items-center justify-center mb-3">
-          <User size={36} className="text-[var(--primary)]" />
-        </div>
+        {user?.profilePicture ? (
+          <img 
+            src={user.profilePicture} 
+            alt={user.username} 
+            className="w-16 h-16 rounded-full object-cover mb-3 border-2 border-[var(--primary)] shadow-sm"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-[var(--primary-light)] flex items-center justify-center mb-3">
+            <User size={36} className="text-[var(--primary)]" />
+          </div>
+        )}
         <h2 className="text-xl sm:text-2xl font-extrabold text-[var(--text)]">{user?.username || 'Learner'}</h2>
         <span className="text-xs sm:text-sm text-[var(--text-secondary)] mt-0.5">{user?.email}</span>
       </div>

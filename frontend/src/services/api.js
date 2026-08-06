@@ -1,6 +1,22 @@
 // Let's use standard localStorage wrappers for simplicity and compatibility!
 
-export const API_URL = 'https://ai-aptitude-wdn5.onrender.com';
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    const isLocal = 
+      hostname === 'localhost' || 
+      hostname === '127.0.0.1' || 
+      hostname.endsWith('.local') || 
+      /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(hostname);
+      
+    if (isLocal) {
+      return `http://${hostname}:5000`;
+    }
+  }
+  return import.meta.env.VITE_API_URL || 'https://ai-aptitude-wdn5.onrender.com';
+};
+
+export const API_URL = getApiUrl();
 
 let cachedAccessToken = null;
 

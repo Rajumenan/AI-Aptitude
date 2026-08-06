@@ -8,7 +8,7 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const { apiLimiter } = require('./middleware/rateLimiter');
 
-// Load environment variables
+// Load environment variables (reloads filesystem .env values on watch reload)
 dotenv.config();
 
 // Connect to MongoDB database

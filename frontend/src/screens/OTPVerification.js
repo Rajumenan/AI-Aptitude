@@ -6,7 +6,7 @@ import ScreenWrapper from '../components/ScreenWrapper';
 
 const OTPVerification = ({ route, navigation }) => {
   const { theme } = useTheme();
-  const { verifyOtp, resetPassword } = useAuth();
+  const { verifyOtp, resetPassword, resendOtp } = useAuth();
   
   const { email, isPasswordReset = false } = route.params || {};
 
@@ -15,6 +15,32 @@ const OTPVerification = ({ route, navigation }) => {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  React.useEffect(() => {
+    let timer;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const handleResendOtp = async () => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      setLoading(true);
+      const res = await resendOtp(email, isPasswordReset ? 'reset' : 'verification');
+      if (res.success) {
+        setSuccessMsg(res.message || 'OTP resent successfully!');
+        setResendCooldown(60); // 60 seconds cooldown
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to resend OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleVerify = async () => {
     setErrorMsg('');
@@ -133,6 +159,19 @@ const OTPVerification = ({ route, navigation }) => {
             </TouchableOpacity>
           </View>
 
+          <View style={styles.resendContainer}>
+            <Text style={[styles.resendText, { color: theme.textSecondary }]}>Didn't receive the OTP? </Text>
+            {resendCooldown > 0 ? (
+              <Text style={[styles.resendLink, { color: theme.textSecondary, textDecorationLine: 'none' }]}>
+                Resend in {resendCooldown}s
+              </Text>
+            ) : (
+              <TouchableOpacity onPress={handleResendOtp} disabled={loading}>
+                <Text style={[styles.resendLink, { color: theme.primary }]}>Resend OTP</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
           <TouchableOpacity 
             onPress={() => navigation.navigate('Login')}
             style={styles.backButton}
@@ -220,6 +259,20 @@ const styles = StyleSheet.create({
   backText: {
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  resendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  resendText: {
+    fontSize: 14,
+  },
+  resendLink: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
 });
 

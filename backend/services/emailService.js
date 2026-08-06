@@ -1,17 +1,24 @@
 const nodemailer = require('nodemailer');
 
-/**
- * Create and configure the Nodemailer transporter using Gmail SMTP.
- * Credentials are loaded from environment variables (never hardcoded).
- */
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS   // Use Gmail App Password, not your main password
-    }
-  });
+// Keep a single, cached transporter instance to optimize network connections
+let transporter;
+
+const getTransporter = () => {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // Use SSL/TLS
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS   // Use Gmail App Password, not your main password
+      },
+      tls: {
+        rejectUnauthorized: false // Prevents local SSL handshake failures
+      }
+    });
+  }
+  return transporter;
 };
 
 /**
@@ -85,7 +92,7 @@ const sendOTPEmail = async (toEmail, otp, type = 'verification') => {
   </html>
   `;
 
-  const transporter = createTransporter();
+  const activeTransporter = getTransporter();
 
   const mailOptions = {
     from: `"AI Quiz Platform" <${process.env.EMAIL_USER}>`,
@@ -96,7 +103,7 @@ const sendOTPEmail = async (toEmail, otp, type = 'verification') => {
     text: `Your OTP for AI Quiz Platform is: ${otp}\n\nThis OTP is valid for 5 minutes. Do not share it with anyone.\n\nTeam AI Quiz Platform`
   };
 
-  const info = await transporter.sendMail(mailOptions);
+  const info = await activeTransporter.sendMail(mailOptions);
   console.log(`[Email] OTP email sent to ${toEmail} — Message ID: ${info.messageId}`);
   return info;
 };

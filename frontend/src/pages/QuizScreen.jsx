@@ -14,7 +14,6 @@ const QuizScreen = () => {
   const [currentQuestion, setCurrentQuestion] = useState(firstQuestion || resumeQuestion || null);
   const [selectedOption, setSelectedOption] = useState(null); // 'A', 'B', 'C', 'D' or null
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [feedback, setFeedback] = useState(null); // 'Correct' or 'Incorrect'
   const [timeLeft, setTimeLeft] = useState(60);
   const [loading, setLoading] = useState(false);
 
@@ -78,17 +77,13 @@ const QuizScreen = () => {
 
     try {
       const res = await api.post('/api/quiz/submit-answer', { 
-        answer: answerToSubmit 
+        answer: answerToSubmit,
+        questionIndex: questionNumber - 1
       });
 
       if (res.success) {
-        setFeedback(res.isCorrect ? 'Correct' : 'Incorrect');
         setLoading(false);
-
-        // Auto-advance after 1.5 seconds
-        autoAdvanceRef.current = setTimeout(() => {
-          advance(res);
-        }, 1500);
+        advance(res);
       }
     } catch (error) {
       setLoading(false);
@@ -106,7 +101,6 @@ const QuizScreen = () => {
       setCurrentQuestion(res.question);
       setSelectedOption(null);
       setIsSubmitted(false);
-      setFeedback(null);
     }
   };
 
@@ -180,17 +174,7 @@ const QuizScreen = () => {
         })}
       </div>
 
-      {/* Answer Feedback Toast */}
-      {feedback && (
-        <div className={`flex items-center justify-center gap-2 p-3 rounded-xl border-1.5 font-bold text-xs sm:text-sm text-center ${
-          feedback === 'Correct' 
-            ? 'border-[var(--success)] bg-[var(--success-light)] text-[var(--success)]' 
-            : 'border-[var(--danger)] bg-[var(--danger-light)] text-[var(--danger)]'
-        }`}>
-          <AlertCircle size={18} />
-          <span>{feedback} Answer</span>
-        </div>
-      )}
+
 
       {/* Action Footer */}
       <div className="pt-2">

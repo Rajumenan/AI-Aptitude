@@ -63,6 +63,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = async (token) => {
+    try {
+      setIsLoading(true);
+      const data = await api.post('/api/auth/google-login', { token });
+      if (data.success) {
+        setCachedToken(data.accessToken);
+        localStorage.setItem('access_token', data.accessToken);
+        localStorage.setItem('refresh_token', data.refreshToken);
+        setUser(data.user);
+        return { success: true };
+      }
+      return { success: false, message: 'Invalid response' };
+    } catch (error) {
+      console.error('Google Login Auth Error:', error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const verifyOtp = async (email, otp) => {
     try {
       setIsLoading(true);
@@ -89,6 +109,18 @@ export const AuthProvider = ({ children }) => {
       return await api.post('/api/auth/forgot-password', { email });
     } catch (error) {
       console.error('Forgot Password Auth Error:', error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resendOtp = async (email, type = 'verification') => {
+    try {
+      setIsLoading(true);
+      return await api.post('/api/auth/resend-otp', { email, type });
+    } catch (error) {
+      console.error('Resend OTP Auth Error:', error.message);
       throw error;
     } finally {
       setIsLoading(false);
@@ -141,9 +173,11 @@ export const AuthProvider = ({ children }) => {
       isLoading,
       login,
       register,
+      googleLogin,
       verifyOtp,
       forgotPassword,
       resetPassword,
+      resendOtp,
       logout,
       refreshUserProfile
     }}>

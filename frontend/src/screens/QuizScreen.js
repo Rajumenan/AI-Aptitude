@@ -16,7 +16,6 @@ const QuizScreen = ({ route, navigation }) => {
   const [currentQuestion, setCurrentQuestion] = useState(firstQuestion || resumeQuestion || null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [feedback, setFeedback] = useState(null);
   const [timeLeft, setTimeLeft] = useState(60);
   const [loading, setLoading] = useState(false);
 
@@ -78,7 +77,6 @@ const QuizScreen = ({ route, navigation }) => {
         questionIndex: questionNumber - 1
       });
       if (res.success) {
-        setFeedback(res.isCorrect ? 'Correct' : 'Incorrect');
         setLoading(false);
         Animated.timing(progressAnim, {
           toValue: res.nextQuestionNumber ? (res.nextQuestionNumber - 1) / 10 : 1.0,
@@ -88,13 +86,7 @@ const QuizScreen = ({ route, navigation }) => {
         if (res.isQuizCompleted && res.streakInfo?.totalTokens !== undefined) {
           setTokenBalance(res.streakInfo.totalTokens);
         }
-        nextQuestionDataRef.current = res;
-        timerRef.current = setTimeout(() => {
-          if (nextQuestionDataRef.current) {
-            advanceToNextQuestion(nextQuestionDataRef.current);
-            nextQuestionDataRef.current = null;
-          }
-        }, 1500);
+        advanceToNextQuestion(res);
       }
     } catch (error) {
       setLoading(false);
@@ -122,7 +114,6 @@ const QuizScreen = ({ route, navigation }) => {
       setCurrentQuestion(res.question);
       setSelectedOption(null);
       setIsSubmitted(false);
-      setFeedback(null);
       // Reset hints for new question
       setHintsUsedThisQuestion(0);
       setHintHistory([]);
@@ -261,18 +252,7 @@ const QuizScreen = ({ route, navigation }) => {
         )}
       </View>
 
-      {/* Feedback Banner */}
-      {feedback && (
-        <View style={[styles.feedbackBanner, {
-          backgroundColor: feedback === 'Correct' ? theme.success + '15' : theme.danger + '15',
-          borderColor: feedback === 'Correct' ? theme.success : theme.danger
-        }]}>
-          <AlertCircle size={18} color={feedback === 'Correct' ? theme.success : theme.danger} style={{ marginRight: 8 }} />
-          <Text style={[styles.feedbackText, { color: feedback === 'Correct' ? theme.success : theme.danger }]}>
-            {feedback} Answer
-          </Text>
-        </View>
-      )}
+
 
       {/* Action Buttons */}
       <View style={styles.footerActions}>

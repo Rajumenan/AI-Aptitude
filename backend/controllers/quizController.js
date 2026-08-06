@@ -65,6 +65,64 @@ const getPerformanceRating = (score) => {
   return 'Needs Improvement';
 };
 
+// Helper: Retrieve question texts asked to the user in recent sessions to ensure uniqueness without high complexity
+const getUserAskedQuestions = async (userId) => {
+  try {
+    const sessions = await QuizSession.find({ userId })
+      .sort({ startTime: -1 })
+      .limit(10) // Limit to last 10 sessions to keep time complexity low
+      .select('questions.questionText');
+    const asked = [];
+    for (const session of sessions) {
+      if (session.questions) {
+        for (const q of session.questions) {
+          if (q.questionText) {
+            asked.push(q.questionText);
+          }
+        }
+      }
+    }
+    return asked;
+  } catch (error) {
+    console.error('[QUIZ CONTROLLER] Error fetching past asked questions:', error.message);
+    return [];
+  }
+};
+
+// Helper: detect and dynamically replace duplicate questions on the fly in active session
+const ensureSessionUniqueness = async (session) => {
+  if (!session || !session.questions || session.questions.length <= 1) return session;
+
+  let hasChanged = false;
+  const uniqueQuestions = [];
+  const seenTexts = new Set();
+
+  for (let i = 0; i < session.questions.length; i++) {
+    const q = session.questions[i];
+    const normalizedText = q.questionText.trim().toLowerCase();
+    
+    if (seenTexts.has(normalizedText)) {
+      console.log(`[QUIZ CONTROLLER] Duplicate question found in session at index ${i}. Replacing on the fly...`);
+      const askedQuestions = await getUserAskedQuestions(session.userId);
+      const currentUniqueTexts = uniqueQuestions.map(uq => uq.questionText);
+      const combinedPrevious = [...new Set([...askedQuestions, ...currentUniqueTexts])];
+      const replacementQuestion = await generateAIQuestion(session.level, combinedPrevious);
+      uniqueQuestions.push(replacementQuestion);
+      seenTexts.add(replacementQuestion.questionText.trim().toLowerCase());
+      hasChanged = true;
+    } else {
+      uniqueQuestions.push(q);
+      seenTexts.add(normalizedText);
+    }
+  }
+
+  if (hasChanged) {
+    session.questions = uniqueQuestions;
+    await session.save();
+  }
+  return session;
+};
+
 // @desc    Start a new quiz session
 // @route   POST /api/quiz/start
 // @access  Private
@@ -83,8 +141,9 @@ exports.startQuiz = async (req, res) => {
       { status: 'completed', endTime: new Date() } // auto-archive
     );
 
-    // Generate the 1st question
-    const firstQuestion = await generateAIQuestion(level, []);
+    // Generate the 1st question ensuring it is globally unique for this user
+    const askedQuestions = await getUserAskedQuestions(userId);
+    const firstQuestion = await generateAIQuestion(level, askedQuestions);
 
     // Create session
     const session = await QuizSession.create({
@@ -122,10 +181,12 @@ exports.getCurrentQuestion = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const session = await QuizSession.findOne({ userId, status: 'in-progress' });
+    let session = await QuizSession.findOne({ userId, status: 'in-progress' });
     if (!session) {
       return res.status(404).json({ success: false, message: 'No active quiz session found' });
     }
+
+    session = await ensureSessionUniqueness(session);
 
     const currentQuestion = session.questions[session.currentQuestionIndex];
     if (!currentQuestion) {
@@ -157,10 +218,12 @@ exports.submitAnswer = async (req, res) => {
     const { answer, questionIndex } = req.body; // 'A', 'B', 'C', 'D' or null
     const userId = req.user._id;
 
-    const session = await QuizSession.findOne({ userId, status: 'in-progress' });
+    let session = await QuizSession.findOne({ userId, status: 'in-progress' });
     if (!session) {
       return res.status(404).json({ success: false, message: 'No active quiz session found' });
     }
+
+    session = await ensureSessionUniqueness(session);
 
     const currentQuestionIdx = session.currentQuestionIndex;
     
@@ -196,11 +259,13 @@ exports.submitAnswer = async (req, res) => {
 
     // Check if quiz has reached 10 questions
     if (session.currentQuestionIndex < 10) {
-      // Gather list of previous questions to avoid duplication in next questions
-      const previousQuestionsList = session.questions.map(q => q.questionText);
+      // Gather list of previous questions to avoid duplication in next questions (globally + session)
+      const askedQuestions = await getUserAskedQuestions(userId);
+      const currentSessionTexts = session.questions.map(q => q.questionText);
+      const combinedPrevious = [...new Set([...askedQuestions, ...currentSessionTexts])];
 
       // Generate the next question
-      const nextQuestion = await generateAIQuestion(session.level, previousQuestionsList);
+      const nextQuestion = await generateAIQuestion(session.level, combinedPrevious);
       session.questions.push(nextQuestion);
       await session.save();
 

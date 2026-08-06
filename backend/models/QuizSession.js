@@ -51,4 +51,6 @@ const QuizSessionSchema = new mongoose.Schema({
   }
 });
 
+QuizSessionSchema.index({ userId: 1, startTime: -1 });
+
 module.exports = mongoose.model('QuizSession', QuizSessionSchema);
