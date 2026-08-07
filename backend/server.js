@@ -16,11 +16,46 @@ connectDB();
 
 const app = express();
 
-// Standard Middlewares
+// Environment-aware Strict CORS Configuration
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Parse explicit origins defined in environment variables (CLIENT_URL or ALLOWED_ORIGINS)
+const configuredOrigins = (process.env.ALLOWED_ORIGINS || process.env.CLIENT_URL || '')
+  .split(',')
+  .map(origin => origin.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
+// Default permitted origins by environment
+const defaultDevOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+];
+
+const defaultProdOrigins = [
+  'https://ai-aptitude-backend.vercel.app/'
+];
+
+// Whitelist only environment-appropriate origins
+const allowedOriginsList = isProduction
+  ? [...new Set([...configuredOrigins, ...defaultProdOrigins])]
+  : [...new Set([...configuredOrigins, ...defaultDevOrigins])];
+
 app.use(cors({
-  origin: "*",
+  origin: (origin, callback) => {
+    // Normalize incoming request origin by stripping any trailing slash
+    const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
+
+    // Allow requests with no origin (e.g., server-to-server, mobile apps, Postman, curl)
+    if (!normalizedOrigin || allowedOriginsList.includes(normalizedOrigin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS Policy Violation: Origin '${origin}' is blocked in ${process.env.NODE_ENV || 'development'} mode`));
+    }
+  },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(express.json());
