@@ -18,7 +18,7 @@ const app = express();
 
 // Standard Middlewares
 app.use(cors({
-  origin: "https://ai-aptitude-rho.vercel.app/",
+  origin: "https://ai-aptitude-rho.vercel.app",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
