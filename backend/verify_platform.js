@@ -4,6 +4,8 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
+require('dotenv').config();
+
 // Mock environmental settings
 process.env.JWT_SECRET = 'test_secret_12345';
 process.env.JWT_REFRESH_SECRET = 'test_refresh_12345';
