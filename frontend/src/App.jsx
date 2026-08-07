@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -73,6 +74,7 @@ const App = () => {
               </Routes>
             </main>
           </div>
+          <Analytics />
         </Router>
       </AuthProvider>
     </ThemeProvider>
