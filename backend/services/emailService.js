@@ -1,24 +1,87 @@
 const nodemailer = require('nodemailer');
 
-// Keep a single, cached transporter instance to optimize network connections
-let transporter;
+/**
+ * Get sanitized environment variables
+ */
+const getEmailConfig = () => {
+  const user = process.env.EMAIL_USER ? process.env.EMAIL_USER.trim() : '';
+  // Remove accidental surrounding quotes from dashboard copy-pastes
+  const pass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/^["']|["']$/g, '').trim() : '';
+  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.EMAIL_PORT, 10) || 465;
+  const isSecure = port === 465;
+
+  return { user, pass, host, port, isSecure };
+};
+
+/**
+ * Create a fresh Nodemailer transport configured with production timeouts
+ */
+const createTransporter = () => {
+  const { user, pass, host, port, isSecure } = getEmailConfig();
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: isSecure,
+    auth: { user, pass },
+    tls: {
+      rejectUnauthorized: false // Prevents local SSL handshake failures
+    },
+    // Explicit timeouts to prevent serverless function hangs on cloud hosts
+    connectionTimeout: 10000, // 10s
+    greetingTimeout: 10000,   // 10s
+    socketTimeout: 15000       // 15s
+  });
+};
+
+// Cached transporter for traditional persistent server environments
+let cachedTransporter;
 
 const getTransporter = () => {
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // Use SSL/TLS
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS   // Use Gmail App Password, not your main password
-      },
-      tls: {
-        rejectUnauthorized: false // Prevents local SSL handshake failures
-      }
-    });
+  // In serverless environments (e.g. Vercel), re-create transport to avoid stale/closed sockets
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    return createTransporter();
   }
-  return transporter;
+  if (!cachedTransporter) {
+    cachedTransporter = createTransporter();
+  }
+  return cachedTransporter;
+};
+
+/**
+ * Fallback helper using Resend API (HTTPS Port 443) if RESEND_API_KEY is configured
+ */
+const sendViaResendAPI = async (toEmail, subject, htmlBody, textBody) => {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) return null;
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM || 'AI Quiz Platform <onboarding@resend.dev>',
+        to: [toEmail],
+        subject,
+        html: htmlBody,
+        text: textBody
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || JSON.stringify(data));
+    }
+    console.log(`[Email] OTP email sent to ${toEmail} via Resend API — ID: ${data.id}`);
+    return data;
+  } catch (err) {
+    console.error(`[Email] Resend API failed:`, err.message);
+    throw err;
+  }
 };
 
 /**
@@ -92,20 +155,39 @@ const sendOTPEmail = async (toEmail, otp, type = 'verification') => {
   </html>
   `;
 
+  const textBody = `Your OTP for AI Quiz Platform is: ${otp}\n\nThis OTP is valid for 5 minutes. Do not share it with anyone.\n\nTeam AI Quiz Platform`;
+
+  // 1. Try Resend HTTP API first if configured (works 100% on serverless / Vercel without SMTP port blocking)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      return await sendViaResendAPI(toEmail, subject, htmlBody, textBody);
+    } catch (resendErr) {
+      console.warn('[Email] Resend API failed, falling back to SMTP Nodemailer...', resendErr.message);
+    }
+  }
+
+  // 2. Validate SMTP environment variables
+  const { user, pass } = getEmailConfig();
+  if (!user || !pass) {
+    console.error(`[Email Error] EMAIL_USER or EMAIL_PASS missing in environment variables. Cannot send email to ${toEmail}.`);
+    throw new Error('Email credentials not configured in server environment.');
+  }
+
+  // 3. Send email via Nodemailer SMTP
   const activeTransporter = getTransporter();
 
   const mailOptions = {
-    from: `"AI Quiz Platform" <${process.env.EMAIL_USER}>`,
+    from: `"AI Quiz Platform" <${user}>`,
     to: toEmail,
     subject,
     html: htmlBody,
-    // Plain-text fallback
-    text: `Your OTP for AI Quiz Platform is: ${otp}\n\nThis OTP is valid for 5 minutes. Do not share it with anyone.\n\nTeam AI Quiz Platform`
+    text: textBody
   };
 
   const info = await activeTransporter.sendMail(mailOptions);
-  console.log(`[Email] OTP email sent to ${toEmail} — Message ID: ${info.messageId}`);
+  console.log(`[Email] OTP email sent to ${toEmail} via SMTP — Message ID: ${info.messageId}`);
   return info;
 };
 
 module.exports = { sendOTPEmail };
+
