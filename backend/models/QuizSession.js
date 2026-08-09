@@ -7,6 +7,8 @@ const QuestionStateSchema = new mongoose.Schema({
     of: String,
     required: true
   },
+  optionsList: { type: [String], default: [] },
+  correctOptionIndex: { type: Number, default: 0 },
   correctOption: { type: String, required: true }, // 'A', 'B', 'C', or 'D'
   explanation: { type: String, required: true },
   topic: { type: String, required: true }

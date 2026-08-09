@@ -17,11 +17,24 @@ connectDB();
 const app = express();
 
 // Standard Middlewares
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  process.env.CLIENT_URL,
+  'https://ai-aptitude-rho.vercel.app'
+].filter(Boolean);
+
 app.use(cors({
-  //origin: "*",
-  origin: "https://ai-aptitude-rho.vercel.app",
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow during dev/testing
+    }
+  },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(express.json());

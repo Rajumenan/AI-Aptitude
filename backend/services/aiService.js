@@ -37,7 +37,6 @@ function isTooSimilar(newQuestion, previousList) {
 }
 
 // @desc    Generate a single aptitude question using Gemini
-// @param   level: String, previousQuestionsList: Array of strings
 exports.generateAIQuestion = async (level, previousQuestionsList = []) => {
   if (!isGeminiEnabled()) {
     console.warn('[AI SERVICE] Gemini API key not found. Using dynamic mock generator.');
@@ -47,29 +46,25 @@ exports.generateAIQuestion = async (level, previousQuestionsList = []) => {
   const MAX_RETRIES = 3;
 
   const schema = {
-    type: 'object',
-    properties: {
-      questionText: { type: 'string', description: 'The text of the aptitude question.' },
-      options: {
-        type: 'object',
-        properties: {
-          A: { type: 'string' },
-          B: { type: 'string' },
-          C: { type: 'string' },
-          D: { type: 'string' }
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        questionText: { type: 'string', description: 'String containing the clear question statement' },
+        options: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Array of 4 options: [Option A, Option B, Option C, Option D]'
         },
-        required: ['A', 'B', 'C', 'D']
+        correctOptionIndex: { type: 'integer', description: '0-based index of the correct option (0, 1, 2, or 3)' },
+        explanation: { type: 'string', description: 'Step-by-step mathematical solution explaining how the correct option was derived.' },
+        topic: { type: 'string', description: 'The specific sub-topic or exam name (e.g., Percentages, TCS NQT, UPSC CSAT).' }
       },
-      correctOption: { type: 'string', enum: ['A', 'B', 'C', 'D'], description: 'The correct choice.' },
-      explanation: { type: 'string', description: 'Detailed, step-by-step mathematical or logical explanation.' },
-      topic: { type: 'string', description: 'The specific sub-topic (e.g. Percentages, Time & Work, Calendars).' }
-    },
-    required: ['questionText', 'options', 'correctOption', 'explanation', 'topic']
+      required: ['questionText', 'options', 'correctOptionIndex', 'explanation', 'topic']
+    }
   };
 
   // Extract already-used topics so the AI avoids repeating them if possible
-  // (For the quiz controller, previousQuestionsList is an array of question text strings,
-  //  so we also accept an array of objects for richer context)
   const isObjectList = previousQuestionsList.length > 0 && typeof previousQuestionsList[0] === 'object';
   const questionTexts = isObjectList
     ? previousQuestionsList.map(q => q.questionText)
@@ -77,7 +72,7 @@ exports.generateAIQuestion = async (level, previousQuestionsList = []) => {
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
       // Build a strongly-worded anti-duplication context
       let previousQuestionsContext;
@@ -90,28 +85,42 @@ exports.generateAIQuestion = async (level, previousQuestionsList = []) => {
         ].join('\n');
       }
 
-      // On retries, explicitly ask for a completely different topic
       const retryNote = attempt > 1
         ? `IMPORTANT: Your previous attempt was rejected for being too similar. Attempt #${attempt}: Pick a COMPLETELY DIFFERENT topic and scenario from ALL previous questions.`
         : '';
 
-      const systemPrompt = `You are an AI Aptitude Quiz Agent. Generate ONE unique, original aptitude question for difficulty level: "${level}".
+      const systemPrompt = `You are an expert Quantitative and Verbal Aptitude Test Engine specializing in competitive exams (e.g., TCS NQT, Infosys, UPSC CSAT, SSC CGL). Your role is to generate precise, error-free multiple-choice questions (MCQs).
 
-## DIFFICULTY TOPICS:
+### CORE RULES:
+1. ACCURACY: Calculate every answer step-by-step internally before generating options. Exactly ONE option must be correct. The other 3 must be plausible distractors based on common calculation mistakes.
+2. STRICT FORMAT: Return ONLY a valid JSON array matching the exact schema provided. Do not include introductory text, explanations outside JSON, or markdown code blocks (e.g., \`\`\`json).
+3. EXPLANATION: Write clear, step-by-step mathematical derivations in the "explanation" field for post-test candidate review.
+
+### OUTPUT JSON SCHEMA:
+[
+  {
+    "questionText": "String containing the clear question statement",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correctOptionIndex": 0,
+    "explanation": "Step-by-step mathematical solution explaining how the correct option was derived.",
+    "topic": "Topic or Exam name"
+  }
+]
+
+### TARGET DIFFICULTY & TOPICS:
+Difficulty Level: "${level}"
+
+Topics / Exam Framework:
 - Basic: Arithmetic, Percentages, Ratio, Profit & Loss, Average, Simple Interest, Time & Work, Number Series, Alphabet Series, Basic Reasoning
 - Intermediate: Probability, Compound Interest, Data Interpretation, Coding-Decoding, Blood Relations, Clocks, Calendars, Syllogism, Seating Arrangement
 - Advance: Advanced Aptitude, Critical Reasoning, Data Sufficiency, Puzzles, Statement & Assumption, Caselet DI, Number Theory
-- Company Related: TCS, Infosys, Wipro, Accenture, Cognizant, Capgemini, Deloitte, IBM, HCL placement test questions
+- Company Related: TCS NQT, Infosys, Wipro, Accenture, Cognizant, Capgemini, Deloitte, IBM, HCL placement test questions
 - Government Exams: SSC CGL, UPSC CSAT, Banking PO, SBI Clerk, IBPS, RRB, TNPSC, Railway RRB questions
 
-## STRICT UNIQUENESS RULES (MANDATORY):
+### STRICT UNIQUENESS RULES:
 ${previousQuestionsContext}
 
-- The question scenario, numbers, and topic MUST be different from ALL previous questions above.
-- Do NOT reuse the same formula, variable names, or context (e.g., don't generate two train/speed problems or two percentage problems in a row if one was already asked).
-- The question must have exactly ONE indisputable correct answer.
-- All 4 options (A, B, C, D) must contain plausible numerical or logical distractors.
-- Provide a detailed, step-by-step explanation in the "explanation" field.
+- Scenario, numbers, and topic MUST be distinct from ALL previous questions above.
 ${retryNote}`;
 
       const result = await model.generateContent({
@@ -119,12 +128,47 @@ ${retryNote}`;
         generationConfig: {
           responseMimeType: 'application/json',
           responseSchema: schema,
-          temperature: 1.0  // Higher temperature = more varied, less repetitive output
+          temperature: 1.0
         }
       });
 
-      const responseText = result.response.text();
-      const question = JSON.parse(responseText);
+      const rawText = result.response.text();
+      const cleanedText = rawText.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+      let parsed = JSON.parse(cleanedText);
+
+      if (Array.isArray(parsed)) {
+        parsed = parsed[0];
+      }
+
+      if (!parsed || !parsed.questionText) {
+        throw new Error('Invalid question object structure received from Gemini');
+      }
+
+      const letters = ['A', 'B', 'C', 'D'];
+      const correctIdx = typeof parsed.correctOptionIndex === 'number' && parsed.correctOptionIndex >= 0 && parsed.correctOptionIndex <= 3
+        ? parsed.correctOptionIndex
+        : 0;
+
+      const optionsList = Array.isArray(parsed.options) && parsed.options.length === 4
+        ? parsed.options.map(String)
+        : ['Option A', 'Option B', 'Option C', 'Option D'];
+
+      const optionsObj = {
+        A: optionsList[0],
+        B: optionsList[1],
+        C: optionsList[2],
+        D: optionsList[3]
+      };
+
+      const question = {
+        questionText: parsed.questionText,
+        options: optionsObj,
+        optionsList: optionsList,
+        correctOptionIndex: correctIdx,
+        correctOption: letters[correctIdx],
+        explanation: parsed.explanation || '',
+        topic: parsed.topic || level
+      };
 
       // Post-generation deduplication check
       if (isTooSimilar(question.questionText, questionTexts)) {
@@ -133,7 +177,7 @@ ${retryNote}`;
           console.warn('[AI SERVICE] All retries exhausted. Using dynamic mock generator.');
           return generateDynamicMockQuestion(level, previousQuestionsList);
         }
-        continue; // Try again
+        continue;
       }
 
       console.log(`[AI SERVICE] Generated unique question on attempt ${attempt}: "${question.topic}"`);
@@ -148,7 +192,6 @@ ${retryNote}`;
     }
   }
 
-  // Should never reach here
   return generateDynamicMockQuestion(level, previousQuestionsList);
 };
 
@@ -167,7 +210,7 @@ exports.generateHint = async (questionText, options, hintNumber = 1) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
     const hintDirectiveness = {
       1: 'a subtle conceptual nudge — mention the topic/concept involved without any numbers or direction',
@@ -232,7 +275,7 @@ exports.analyzePerformance = async (quizData) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
     const schema = {
       type: 'object',
@@ -541,7 +584,8 @@ function generateDynamicMockQuestion(level, previousQuestionsList) {
     D: shuffledValues[3]
   };
 
-  const correctLetter = letters[shuffledValues.indexOf(options.A)];
+  const correctIndex = shuffledValues.indexOf(options.A);
+  const correctLetter = letters[correctIndex >= 0 ? correctIndex : 0];
 
   // Deduplicate against Asked list to ensure strict unique checks
   if (askedQuestions.includes(questionText)) {
@@ -552,6 +596,8 @@ function generateDynamicMockQuestion(level, previousQuestionsList) {
   return {
     questionText,
     options: randomizedOptions,
+    optionsList: shuffledValues,
+    correctOptionIndex: correctIndex >= 0 ? correctIndex : 0,
     correctOption: correctLetter,
     explanation,
     topic
