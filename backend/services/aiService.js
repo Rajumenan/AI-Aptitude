@@ -198,12 +198,6 @@ ${retryNote}`;
 // @desc    Generate a contextual hint for a quiz question using Gemini
 // @param   questionText: String, options: Object {A,B,C,D}, hintNumber: 1|2|3
 exports.generateHint = async (questionText, options, hintNumber = 1) => {
-  const fallbackHints = [
-    'Try eliminating the most obviously wrong answer first, then compare the remaining options.',
-    'Focus on the key numbers or relationships in the question. Try working backwards from the options.',
-    'Identify the formula or concept being tested. Substitute options into the question to verify.'
-  ];
-
   if (!isGeminiEnabled()) {
     console.warn('[AI SERVICE] Gemini API key not found. Using mock hint.');
     return generateMockHint(questionText, options, hintNumber);
@@ -213,12 +207,12 @@ exports.generateHint = async (questionText, options, hintNumber = 1) => {
     const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
     const hintDirectiveness = {
-      1: 'a subtle conceptual nudge — mention the topic/concept involved without any numbers or direction',
-      2: 'a moderate hint — describe the approach or method to use, without revealing the answer',
-      3: 'a strong hint — walk through the first step of the solution process clearly'
+      1: 'Level 1 Clue: Give a simple 1-sentence clue about the basic formula or idea to use.',
+      2: 'Level 2 Clue: Give a simple 1-sentence tip on how to set up or solve the problem.',
+      3: 'Level 3 Clue: Walk through the very first calculation step in 1-2 simple sentences.'
     };
 
-    const promptText = `You are a quiz assistant. A student needs a hint for this aptitude question.
+    const promptText = `You are a friendly aptitude tutor. Give a very simple, easy-to-understand hint for this question.
 
 Question: ${questionText}
 Options:
@@ -227,19 +221,21 @@ B) ${options.B}
 C) ${options.C}
 D) ${options.D}
 
-This is hint #${hintNumber}. Provide ${hintDirectiveness[hintNumber] || hintDirectiveness[1]}.
+Hint level: #${hintNumber} (${hintDirectiveness[hintNumber] || hintDirectiveness[1]})
 
-IMPORTANT RULES:
-- Do NOT reveal or directly state the correct answer or its option letter.
-- Keep the hint concise (2-3 sentences max).
-- Be helpful but leave the final answer for the student to determine.`;
+STRICT SIMPLICITY GUIDELINES:
+- Keep it ULTRA-CONCISE: Maximum 1 to 2 short, simple sentences (under 30 words total).
+- Use simple, conversational language that anyone can easily understand.
+- NO elaborate explanations, long derivations, or textbook jargon.
+- Get straight to the point.
+- NEVER state the correct answer or mention option letters (A, B, C, or D).`;
 
     const schema = {
       type: 'object',
       properties: {
         hint: {
           type: 'string',
-          description: 'The hint text for the student.'
+          description: 'A very simple, short, 1-2 sentence hint.'
         }
       },
       required: ['hint']
@@ -250,7 +246,7 @@ IMPORTANT RULES:
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: schema,
-        temperature: 0.4
+        temperature: 0.3
       }
     });
 
@@ -607,9 +603,9 @@ function generateDynamicMockQuestion(level, previousQuestionsList) {
 // @desc    Dynamically generate hints programmatically
 function generateMockHint(questionText, options, hintNumber) {
   const fallbackHints = [
-    'Try eliminating the most obviously wrong answer first, then compare the remaining options.',
-    'Focus on the key numbers or relationships in the question. Try working backwards from the options.',
-    'Identify the formula or concept being tested. Substitute options into the question to verify.'
+    'Concept Clue: Check the core relationship between the key quantities given.',
+    'Method Clue: Eliminate options that are clearly too high or too low.',
+    'Step-by-Step Clue: Start by setting up the first basic equation or calculation step.'
   ];
   return { hint: fallbackHints[hintNumber - 1] || fallbackHints[0] };
 }

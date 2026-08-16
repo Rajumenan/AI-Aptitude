@@ -6,7 +6,8 @@ import { api } from '../services/api';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { Clock, AlertCircle, Lightbulb, X } from 'lucide-react-native';
 
-const HINT_COSTS = { 1: 30, 2: 50, 3: 70 };
+// Hint token costs: 30 tokens = 1 hint, 60 tokens = 2 hints, 80 tokens = 3 hints
+const HINT_COSTS = { 1: 30, 2: 60, 3: 80 };
 
 const QuizScreen = ({ route, navigation }) => {
   const { theme } = useTheme();

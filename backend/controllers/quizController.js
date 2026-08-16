@@ -7,8 +7,8 @@ const Notification = require('../models/Notification');
 const User = require('../models/User');
 const { generateAIQuestion, analyzePerformance, generateHint } = require('../services/aiService');
 
-// Hint token costs
-const HINT_COSTS = { 1: 30, 2: 50, 3: 70 };
+// Hint token costs (30 tokens = 1 hint, 60 tokens = 2 hints, 80 tokens = 3 hints)
+const HINT_COSTS = { 1: 30, 2: 60, 3: 80 };
 
 // Helper: compute UTC midnight date string (YYYY-MM-DD)
 const utcDateStr = (date) => date.toISOString().slice(0, 10);

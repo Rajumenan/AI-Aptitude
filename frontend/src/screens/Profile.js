@@ -256,6 +256,13 @@ const Profile = ({ navigation }) => {
                   Yes, active sessions are saved to the server. Tapping the "Resume Quiz" banner on your dashboard lets you continue right where you left off.
                 </Text>
               </View>
+              <View style={styles.faqLine} />
+              <View style={styles.faqItem}>
+                <Text style={[styles.faqQuestion, { color: theme.text }]}>How do daily reward tokens and hints work?</Text>
+                <Text style={[styles.faqAnswer, { color: theme.textSecondary }]}>
+                  Earn tokens by completing quizzes daily (+2 tokens/day, +10 on Sunday). Convert tokens into AI hints during any quiz: Hint #1 = 30 tokens, Hint #2 = 60 tokens, Hint #3 = 80 tokens.
+                </Text>
+              </View>
             </View>
           )}
 

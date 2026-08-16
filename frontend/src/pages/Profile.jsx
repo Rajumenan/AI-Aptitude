@@ -247,6 +247,17 @@ const Profile = () => {
                   Yes, session state is preserved on the server. If you leave or refresh, a resume banner will appear on the Dashboard.
                 </p>
               </div>
+              <div className="border-t border-[var(--border)] pt-3">
+                <h4 className="text-sm font-bold text-[var(--text)] mb-1">How do daily reward tokens and hints work?</h4>
+                <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                  Earn daily tokens by completing quizzes every day (+2 tokens/day, +10 on Sunday). You can convert tokens to AI hints during any quiz:
+                </p>
+                <ul className="text-xs text-[var(--text-secondary)] mt-1.5 space-y-1 list-disc list-inside">
+                  <li><strong>Hint #1:</strong> 30 tokens</li>
+                  <li><strong>Hint #2:</strong> 60 tokens</li>
+                  <li><strong>Hint #3:</strong> 80 tokens</li>
+                </ul>
+              </div>
             </div>
           )}
 
